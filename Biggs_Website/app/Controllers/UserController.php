@@ -55,8 +55,10 @@ class UserController extends BaseController
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and phone number are required']);
         }
 
+        $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
+
         if ($user) {
-            return $this->response->setJSON($user);
+            return $this->response->setJSON(array_merge($user, ['loyalty_points' => $loyaltyPoints]));
         } else {
             return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
@@ -129,6 +131,25 @@ class UserController extends BaseController
             'events_flag' => (int)($user['events_flag'] ?? null),
             'franchising_flag' => (int)($user['franchising_flag'] ?? null),
         ]);
+    }
+
+    public function getLoyaltyPoints()
+    {
+        $data = $this->request->getJSON();
+
+        $tagUid = $data->tag_uid;
+
+        if ($tagUid) {
+            $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
+        } else {
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
+        }
+
+        if ($loyaltyPoints) {
+            return $this->response->setJSON($loyaltyPoints);
+        } else {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Loyalty points not found']);
+        }
     }
 
     public function createUser()

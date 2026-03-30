@@ -48,6 +48,7 @@ export default function RootLayout() {
                 <Stack.Screen name="splash" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(promos)" />
+                <Stack.Screen name="(more)" />
                 <Stack.Screen name="(notifications)" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(booking)" />

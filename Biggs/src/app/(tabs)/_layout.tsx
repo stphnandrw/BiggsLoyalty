@@ -12,7 +12,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="promos" />
       <Tabs.Screen name="store-locator" />
-      <Tabs.Screen name="profile" />
+      <Tabs.Screen name="more" />
     </Tabs>
   );
 }

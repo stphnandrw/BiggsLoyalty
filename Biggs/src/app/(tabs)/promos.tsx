@@ -9,6 +9,7 @@ import {
   getUserFavoritePromos,
   removeFavoritePromo,
 } from "@/src/services/api/promos";
+import { getLoyaltyPoints } from "@/src/services/api/user";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -52,6 +53,12 @@ export default function Promo() {
     };
     loadUser();
   }, []);
+
+  const { data: loyaltyData, isLoading: isLoadingLoyalty } = useQuery({
+    queryKey: ["loyaltyPoints", tagUid],
+    queryFn: () => getLoyaltyPoints(tagUid as string),
+    enabled: !!tagUid,
+  });
 
   const { data: allPromos = [], isLoading: isLoadingPromos } = useQuery({
     queryKey: ["promos", tagUid],
@@ -155,11 +162,15 @@ export default function Promo() {
                 Total Points
               </Text>
             </View>
-            <View className="w-full items-center justify-center mb-6">
-              <Text className="text-darkBlue text-7xl leading-none font-kanitBold">
-                1,234
-              </Text>
-            </View>
+            {isLoadingLoyalty ? (
+              <LoadingOverlay />
+            ) : (
+              <View className="w-full items-center justify-center mb-6">
+                <Text className="text-darkBlue text-7xl leading-none font-kanitBold">
+                  {loyaltyData?.points ?? "0"}
+                </Text>
+              </View>
+            )}
 
             <PromoTabBar
               tabs={TABS}

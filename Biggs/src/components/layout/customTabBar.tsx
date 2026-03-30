@@ -11,11 +11,14 @@ const TAB_COUNT = 4;
 const TAB_WIDTH = width / TAB_COUNT;
 const LINE_WIDTH = TAB_WIDTH * 0.9; // Width of the indicator line
 
-const iconMap: Record<string, { focused: string; unfocused: string }> = {
-  index: { focused: "home", unfocused: "home-outline" },
-  "store-locator": { focused: "map", unfocused: "map-outline" },
-  profile: { focused: "person", unfocused: "person-outline" },
-  promos: { focused: "pricetags", unfocused: "pricetags-outline" },
+const iconMap: Record<
+  string,
+  { focused: string; unfocused: string; size: number }
+> = {
+  index: { focused: "home", unfocused: "home-outline", size: 24 },
+  "store-locator": { focused: "map", unfocused: "map-outline", size: 24 },
+  more: { focused: "menu", unfocused: "menu-outline", size: 36 },
+  promos: { focused: "pricetags", unfocused: "pricetags-outline", size: 22 },
 };
 
 const PROTECTED_TABS = new Set(["promos", "profile"]);
@@ -93,8 +96,12 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const icons = iconMap[route.name];
-          const iconName: any = isFocused ? icons?.focused : icons?.unfocused;
+          const iconConfig = iconMap[route.name]; // Get the full config object
+
+          const iconName: any = isFocused
+            ? iconConfig?.focused
+            : iconConfig?.unfocused;
+          const iconSize = iconConfig?.size || 24; // Fallback to 24 if not defined
 
           const onPress = async () => {
             if (isFocused) return;
@@ -139,8 +146,8 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               >
                 <Ionicons
                   name={iconName}
-                  size={24}
-                  color={isFocused ? "#3db5e7" : "#888"} // Changed white to black to match the line
+                  size={iconSize} // Use the custom size here
+                  color={isFocused ? "#3db5e7" : "#888"}
                 />
               </Animated.View>
             </Pressable>

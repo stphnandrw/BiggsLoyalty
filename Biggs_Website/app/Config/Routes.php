@@ -17,6 +17,9 @@ $routes->group('user', function ($routes) {
     // OTP routes
     $routes->post('generate-otp', 'OtpController::generateOTP');
     $routes->post('verify-otp', 'OtpController::verifyOTP');
+
+    // Loyalty points
+    $routes->post('loyalty-points', 'UserController::getLoyaltyPoints');
 });
 
 

@@ -96,20 +96,25 @@ export function PrimaryButton({
 }
 
 export function MiniPrimaryButton({
+  icon,
   buttonName,
   route,
   onPress: customOnPress,
 }: ButtonProps) {
   return (
-    <View className="w-full items-center">
-      <Pressable
-        className="bg-darkBlue py-[2px] px-3 rounded-3xl border-4 border-saffron"
-        onPress={() => handlePress(route, customOnPress)}
-      >
-        <Text className="text-center font-kanitBold text-white">
-          {buttonName}
-        </Text>
-      </Pressable>
+    <View>
+      <View className="w-full items-center">
+        <Pressable
+          className="bg-darkBlue py-[2px] px-3 rounded-3xl border-4 border-saffron flex-row items-center"
+          onPress={() => handlePress(route, customOnPress)}
+        >
+          {icon && <View className="mr-2">{icon}</View>}
+
+          <Text className="text-center font-kanitBold text-white">
+            {buttonName}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

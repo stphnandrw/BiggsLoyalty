@@ -36,6 +36,19 @@ export const checkUserExists = async (phone_number: string) => {
   }
 };
 
+export const getLoyaltyPoints = async (tag_uid: string) => {
+  try {
+    const response = await api.post(`/user/loyalty-points`, {
+      tag_uid,
+    });
+    console.log("Get Loyalty Points API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Get Loyalty Points API Error:", error);
+    throw error;
+  }
+};
+
 export const createUser = async (userData: {
   tag_uid: string;
   name: string;
