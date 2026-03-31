@@ -17,7 +17,7 @@ class PromoController extends BaseController
 
         $tagUid = $data->tag_uid;
 
-        $promos = $this->promoModel->getPromosExcludingFavorites($tagUid);
+    $promos = $this->promoModel->getPromosExcludingFavorites($tagUid);
 
         return $this->response->setJSON($promos);
     }

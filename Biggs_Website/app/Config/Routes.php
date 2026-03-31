@@ -20,6 +20,10 @@ $routes->group('user', function ($routes) {
 
     // Loyalty points
     $routes->post('loyalty-points', 'UserController::getLoyaltyPoints');
+    
+    // Add Favorite routes
+    $routes->post('addFavoriteMenu', 'UserController::addFavoriteMenu');
+    $routes->post('addFavoriteLocation', 'UserController::addFavoriteLocation');
 });
 
 
@@ -33,4 +37,9 @@ $routes->group('favorites', function ($routes) {
 $routes->group('promos', function ($routes) {
     $routes->get('/', 'PromoController::getAllPromos');
     $routes->post('exclude-favorites', 'PromoController::getPromosExcludingFavorites');
+});
+
+$routes->group('menu', function ($routes) {
+    $routes->get('/', 'MenuController::getAllMenus');
+    $routes->get('categories', 'MenuController::getMenuCategories');
 });

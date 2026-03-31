@@ -59,7 +59,7 @@ export default function Profile() {
       edges={["top", "left", "right"]}
     >
       <View className="w-full h-full bg-white">
-        <HeaderBigLogo />
+        <HeaderBigLogo hasLogout useConfirmation />
 
         {isLoading ? (
           <LoadingOverlay />

@@ -4,28 +4,31 @@ namespace App\Controllers;
 
 class UserController extends BaseController
 {
-    public function index(): string
-    {
-        return view('welcome_message');
-    }
-
     public function getUsers()
     {
+        log_message('debug', 'Fetching all users');
+
         $users = $this->userModel->findAll();
+
+        log_message('debug', 'Users fetched count: ' . count($users));
 
         return $this->response->setJSON($users);
     }
 
-    public function getUserByTagUID(){
+    public function getUserByTagUID()
+    {
         $data = $this->request->getJSON();
+        log_message('debug', 'getUserByTagUID payload: ' . json_encode($data));
 
-        $tagUid = $data->tag_uid;
+        $tagUid = $data->tag_uid ?? null;
 
-        if ($tagUid) {
-            $user = $this->userModel->where('tag_uid', $tagUid)->first();
-        } else {
+        if (!$tagUid) {
+            log_message('error', 'Tag UID is missing');
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
         }
+
+        $user = $this->userModel->where('tag_uid', $tagUid)->first();
+        log_message('debug', 'User query result: ' . json_encode($user));
 
         if ($user) {
             return $this->response->setJSON([
@@ -33,76 +36,88 @@ class UserController extends BaseController
                 'message' => 'User found',
                 'phone_number' => $user['phone_number'] ?? null,
             ]);
-        } else {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
 
+        log_message('error', 'User not found: ' . $tagUid);
+        return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
     }
 
     public function getUserByTagUidAndPhone()
     {
         $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
 
-        $tagUid = $data->tag_uid;
-        $phoneNumber = $data->phone_number;
+        $tagUid = $data->tag_uid ?? null;
+        $phoneNumber = $data->phone_number ?? null;
 
-        if ($tagUid && $phoneNumber) {
-            $user = $this->userModel
-                ->where('tag_uid', $tagUid)
-                ->where('phone_number', $phoneNumber)
-                ->first();
-        } else {
+        if (!$tagUid || !$phoneNumber) {
+            log_message('error', 'Missing tag_uid or phone_number');
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and phone number are required']);
         }
 
-        $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
+        $user = $this->userModel
+            ->where('tag_uid', $tagUid)
+            ->where('phone_number', $phoneNumber)
+            ->first();
 
-        if ($user) {
-            return $this->response->setJSON(array_merge($user, ['loyalty_points' => $loyaltyPoints]));
-        } else {
+        log_message('debug', 'User found: ' . json_encode($user));
+
+        if (!$user) {
+            log_message('error', 'User not found');
             return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
+
+        $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
+        log_message('debug', 'Loyalty points: ' . json_encode($loyaltyPoints));
+
+        return $this->response->setJSON(array_merge($user, [
+            'loyalty_points' => $loyaltyPoints
+        ]));
     }
 
     public function getUserByPhoneNumber()
     {
         $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
 
-        $phone_number = $data->phone_number;
+        $phone_number = $data->phone_number ?? null;
+
+        if (!$phone_number) {
+            log_message('error', 'Phone number missing');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Phone number is required']);
+        }
 
         $user = $this->userModel->where('phone_number', $phone_number)->first();
+        log_message('debug', 'User result: ' . json_encode($user));
 
         if ($user) {
             return $this->response->setJSON($user);
-        } else {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
+
+        log_message('error', 'User not found for phone: ' . $phone_number);
+        return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
     }
 
     public function checkPhoneIfExist()
     {
         $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
 
         $phone_number = $data->phone_number ?? null;
-        
-        if (empty($phone_number)) {
-            return $this->response
-                ->setStatusCode(400)
-                ->setJSON([
-                    'exists' => false,
-                    'message' => 'Phone number is required'
-                ]);
-        }
-        if (!empty($phone_number)) {
-            $user = $this->userModel->where('phone_number', $phone_number)->first();
+
+        if (!$phone_number) {
+            log_message('error', 'Phone number is required');
+            return $this->response->setStatusCode(400)->setJSON([
+                'exists' => false,
+                'message' => 'Phone number is required'
+            ]);
         }
 
-        $latestUserToken = null;
+        $user = $this->userModel->where('phone_number', $phone_number)->first();
+        log_message('debug', 'User lookup: ' . json_encode($user));
 
         if (!$user) {
-            return $this->response->setJSON([
-                'exists' => false
-            ]);
+            return $this->response->setJSON(['exists' => false]);
         }
 
         $latestUserToken = $this->userTokensModel
@@ -110,101 +125,141 @@ class UserController extends BaseController
             ->orderBy('token_id', 'DESC')
             ->first();
 
-        // validation for users with incomplete data (e.g. only email or phone number)
+        log_message('debug', 'Latest token: ' . json_encode($latestUserToken));
+
         if ($user['name'] === null || $user['birthday'] === null) {
+            log_message('debug', 'Incomplete user: ' . $user['tag_uid']);
+
             return $this->response->setJSON([
                 'exists' => true,
-                'tag_uid' => $user['tag_uid'] ?? null,
+                'tag_uid' => $user['tag_uid'],
                 'is_incomplete' => true,
                 'expo_push_token' => $latestUserToken['expo_push_token'] ?? null,
             ]);
         }
 
+        log_message('debug', 'User complete: ' . $user['tag_uid']);
+
         return $this->response->setJSON([
             'exists' => true,
-            'tag_uid' => $user['tag_uid'] ?? null,
-            'name' => $user['name'] ?? null,
-            'email' => $user['email'] ?? null,
-            'phone_number' => $user['phone_number'] ?? null,
-            'birthday' => $user['birthday'] ?? null,
+            'tag_uid' => $user['tag_uid'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'phone_number' => $user['phone_number'],
+            'birthday' => $user['birthday'],
             'expo_push_token' => $latestUserToken['expo_push_token'] ?? null,
-            'events_flag' => (int)($user['events_flag'] ?? null),
-            'franchising_flag' => (int)($user['franchising_flag'] ?? null),
+            'events_flag' => (int)($user['events_flag'] ?? 0),
+            'franchising_flag' => (int)($user['franchising_flag'] ?? 0),
         ]);
     }
 
     public function getLoyaltyPoints()
     {
         $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
 
-        $tagUid = $data->tag_uid;
+        $tagUid = $data->tag_uid ?? null;
 
-        if ($tagUid) {
-            $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
-        } else {
+        if (!$tagUid) {
+            log_message('error', 'Tag UID missing');
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
         }
 
+        $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
+        log_message('debug', 'Loyalty result: ' . json_encode($loyaltyPoints));
+
         if ($loyaltyPoints) {
             return $this->response->setJSON($loyaltyPoints);
-        } else {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'Loyalty points not found']);
         }
+
+        log_message('error', 'Loyalty not found');
+        return $this->response->setStatusCode(404)->setJSON(['message' => 'Loyalty points not found']);
     }
 
-    public function createUser()
+    public function addFavoriteMenu()
     {
         $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
 
-        if (!$data) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid JSON']);
+        $tagUid = $data->tag_uid ?? null;
+        $m_id = $data->m_id ?? null;
+
+        if (!$tagUid || !$m_id) {
+            log_message('error', 'Missing tag_uid or m_id');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and Menu ID are required']);
         }
 
-        $insertData = (array) $data;
-        $expoPushToken = $insertData['expo_push_token'] ?? null;
-        unset($insertData['expo_push_token']);
-
-        $userId = $this->userModel->insert($insertData);
-
-        if ($userId) {
-            if (!empty($expoPushToken)) {
-                $existingToken = $this->userTokensModel
-                    ->where('user_id', $userId)
-                    ->where('expo_push_token', $expoPushToken)
-                    ->first();
-
-                if (!$existingToken) {
-                    $this->userTokensModel->insert([
-                        'user_id' => $userId,
-                        'expo_push_token' => $expoPushToken,
-                    ]);
-                }
-            }
-
-            return $this->response->setStatusCode(201)->setJSON(['message' => 'User created', 'user_id' => $userId]);
-        } else {
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to create user']);
+        if (!$this->userModel->find($tagUid)) {
+            log_message('error', 'User not found: ' . $tagUid);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
+
+        if (!$this->menuModel->find($m_id)) {
+            log_message('error', 'Menu not found: ' . $m_id);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Menu item not found']);
+        }
+
+        $menu_code = $this->menuModel->getMenuCodeById($m_id);
+
+        if ($this->userModel->addFavoriteMenuByTagUid($tagUid, $menu_code)) {
+            log_message('debug', 'Menu added to favorites');
+            return $this->response->setJSON(['message' => 'Menu added to favorites']);
+        }
+
+        log_message('error', 'Failed to add favorite menu');
+        return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to add menu']);
+    }
+
+    public function addFavoriteLocation()
+    {
+        $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
+
+        $tagUid = $data->tag_uid ?? null;
+        $branch_id = $data->branch_id ?? null;
+
+        if (!$tagUid || !$branch_id) {
+            log_message('error', 'Missing tag_uid or branch_id');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and Branch ID are required']);
+        }
+
+        if (!$this->userModel->find($tagUid)) {
+            log_message('error', 'User not found: ' . $tagUid);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
+        }
+
+        if (!$this->branchModel->find($branch_id)) {
+            log_message('error', 'Branch not found: ' . $branch_id);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Branch not found']);
+        }
+
+        $branch_code = $this->branchModel->getBranchCodeById($branch_id);
+
+        if ($this->userModel->addFavoriteLocationByTagUid($tagUid, $branch_code)) {
+            log_message('debug', 'Branch added to favorites');
+            return $this->response->setJSON(['message' => 'Branch added to favorites']);
+        }
+
+        log_message('error', 'Failed to add favorite branch');
+        return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to add branch']);
     }
 
     public function updateUser()
     {
         $data = $this->request->getJSON();
-
-        log_message('debug', 'Received data for update: ' . json_encode($data));
+        log_message('debug', 'Update payload: ' . json_encode($data));
 
         $tag_uid = $data->tag_uid ?? null;
 
         if (!$tag_uid) {
+            log_message('error', 'Tag UID missing');
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
         }
 
-        $expoPushToken = $data->expo_push_token;
+        $expoPushToken = $data->expo_push_token ?? null;
 
         $updateData = (array) $data;
-
-        unset($updateData['expo_push_token']);
-        unset($updateData['tag_uid']);
+        unset($updateData['expo_push_token'], $updateData['tag_uid']);
 
         if ($expoPushToken) {
             $existingToken = $this->userTokensModel
@@ -217,25 +272,28 @@ class UserController extends BaseController
                     'tag_uid' => $tag_uid,
                     'expo_push_token' => $expoPushToken,
                 ]);
+                log_message('debug', 'New expo token saved');
             }
         }
 
         $user = $this->userModel->find($tag_uid);
+
         if (!$user) {
+            log_message('error', 'User not found: ' . $tag_uid);
             return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
 
-        // Token-only updates are valid. Skip users-table update when no user fields remain.
         if (empty($updateData)) {
-            $updatedUser = $this->userModel->find($tag_uid);
-            return $this->response->setJSON(['message' => 'User token updated', 'user' => $updatedUser]);
+            log_message('debug', 'Only token updated');
+            return $this->response->setJSON(['message' => 'User token updated']);
         }
 
         if ($this->userModel->update($tag_uid, $updateData)) {
-            $updatedUser = $this->userModel->find($tag_uid);
-            return $this->response->setJSON(['message' => 'User updated', 'user' => $updatedUser]);
-        } else {
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to update user']);
+            log_message('debug', 'User updated successfully');
+            return $this->response->setJSON(['message' => 'User updated']);
         }
+
+        log_message('error', 'Failed to update user');
+        return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to update user']);
     }
 }

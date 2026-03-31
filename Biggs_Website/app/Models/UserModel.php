@@ -23,4 +23,14 @@ class UserModel extends Model
         'events_flag',
         'franchising_flag',
     ];
+
+    public function addFavoriteMenuByTagUid($tag_uid, $m_code)
+    {
+        return $this->update($tag_uid, ['fave_item' => $m_code]);
+    }
+
+    public function addFavoriteLocationByTagUid($tag_uid, $branch_code)
+    {
+        return $this->update($tag_uid, ['fave_location' => $branch_code]);
+    }
 }

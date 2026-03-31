@@ -41,10 +41,11 @@ interface CardProps {
 
 interface ProductCardProps {
   productName?: string;
-  subtitle?: string;
-  price?: number;
-  currency?: string;
-  imageRef?: any;
+  subtitle1?: string;
+  subtitle2?: string;
+  price?: string;
+  price2?: string;
+  imageRef?: string;
   isFavorited?: boolean;
   onFavoriteToggle?: () => void;
   onAdd?: () => void;
@@ -370,7 +371,7 @@ export function VoucherCard({
 
       <View className="flex-1 p-4 justify-between">
         <View className="flex-row justify-between items-center">
-          <Text className="text-white text-lg font-bold opacity-70">
+          <Text className="text-white text-lg font-kanitBold opacity-70">
             {description}
           </Text>
 
@@ -394,13 +395,13 @@ export function VoucherCard({
     </Pressable>
   );
 }
-
 // ─── Product Card ─────────────────────────────────────────────────────────────
 export function ProductCard({
-  productName = "Chambertin",
-  subtitle = "Grand Cru",
-  price = 250,
-  currency = "$",
+  productName,
+  subtitle1,
+  subtitle2,
+  price,
+  price2,
   imageRef,
   isFavorited = false,
   onFavoriteToggle,
@@ -414,44 +415,58 @@ export function ProductCard({
   };
 
   return (
-    <View className="bg-white rounded-2xl p-4 w-40 shadow-md">
-      <Pressable
-        className="absolute top-3 right-3 z-10"
-        onPress={handleFavorite}
-      >
-        <Fontisto
-          name={favorited ? "heart" : "heart-alt"}
-          size={16}
-          color="#ef4444"
-        />
-      </Pressable>
+    <View className="w-full h-72 rounded-lg overflow-hidden bg-[#1a1a1a] shadow-lg">
+      {/* Image area */}
+      <View className="w-full h-52 relative">
+        {imageRef ? (
+          <Image
+            source={{ uri: imageRef }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="w-full h-full items-center justify-center bg-[#2a2a2a]">
+            <Text className="text-6xl">🍷</Text>
+          </View>
+        )}
 
-      {imageRef ? (
-        <Image
-          source={imageRef}
-          className="w-full h-28 mb-2"
-          resizeMode="contain"
-        />
-      ) : (
-        <View className="w-full h-28 items-center justify-center mb-2">
-          <Text className="text-6xl">🍷</Text>
-        </View>
-      )}
-
-      <Text className="text-sm font-bold text-gray-900">{productName}</Text>
-      <Text className="text-xs text-gray-400 mb-2">{subtitle}</Text>
-
-      <View className="flex-row justify-between items-center">
-        <Text className="text-lg font-extrabold text-gray-900">
-          {currency}
-          {price}
-        </Text>
+        {/* Favorite button */}
         <Pressable
-          className="bg-red-700 w-8 h-8 rounded-lg items-center justify-center"
-          onPress={onAdd}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 items-center justify-center"
+          onPress={handleFavorite}
         >
-          <Text className="text-white text-xl font-bold leading-none">+</Text>
+          <Fontisto
+            name={favorited ? "heart" : "heart-alt"}
+            size={15}
+            color="#ef4444"
+          />
         </Pressable>
+      </View>
+
+      {/* Bottom info bar */}
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <View className="flex-1 mr-2">
+          <Text className="text-sm font-kanitBold text-white" numberOfLines={1}>
+            {productName}
+          </Text>
+          {subtitle1 && (
+            <Text className="text-xs text-gray-400 mt-0.5" numberOfLines={1}>
+              {subtitle1}
+            </Text>
+          )}
+          {subtitle2 && (
+            <Text className="text-xs text-gray-400" numberOfLines={1}>
+              {subtitle2}
+            </Text>
+          )}
+        </View>
+
+        <View className="items-end">
+          <Text className="text-base font-extrabold text-yellow-400">
+            {price}
+          </Text>
+          {price2 && <Text className="text-xs text-gray-400">{price2}</Text>}
+        </View>
       </View>
     </View>
   );

@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const MapBoxAccessToken = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-Mapbox.setAccessToken(MapBoxAccessToken);
+Mapbox.setAccessToken(MapBoxAccessToken ?? null);
 
 const defaultCoordinate: [number, number] = [
   122.56434150000001, 13.652179200000027,

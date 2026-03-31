@@ -14,6 +14,8 @@ use App\Models\PromoModel;
 use App\Models\FavoriteModel;
 use App\Models\OtpModel;
 use App\Models\BtcLoyaltyModel;
+use App\Models\MenuModel;
+use App\Models\BranchModel;
 
 /**
  * BaseController provides a convenient place for loading components
@@ -40,6 +42,8 @@ abstract class BaseController extends Controller
     protected $favoriteModel;
     protected $otpModel;
     protected $btcLoyaltyModel;
+    protected $menuModel;
+    protected $branchModel;
 
     /**
      * @return void
@@ -60,6 +64,8 @@ abstract class BaseController extends Controller
         $this->favoriteModel = new FavoriteModel();
         $this->otpModel = new OtpModel();
         $this->btcLoyaltyModel = new BtcLoyaltyModel();
+        $this->menuModel = new MenuModel();
+        $this->branchModel = new BranchModel();
         
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
