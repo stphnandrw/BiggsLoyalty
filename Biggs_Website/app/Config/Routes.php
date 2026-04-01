@@ -24,6 +24,10 @@ $routes->group('user', function ($routes) {
     // Add Favorite routes
     $routes->post('addFavoriteMenu', 'UserController::addFavoriteMenu');
     $routes->post('addFavoriteLocation', 'UserController::addFavoriteLocation');
+    $routes->post('getFavoriteBranchByCode', 'UserController::getFavoriteBranchByCode');
+    $routes->post('getFavoriteLocationByTagUid', 'UserController::getFavoriteLocationByTagUid');
+    $routes->post('getFavoriteMenuByCode', 'UserController::getFavoriteMenuByCode');
+    $routes->post('getFavoriteMenuByTagUid', 'UserController::getFavoriteMenuByTagUid');
 });
 
 

@@ -13,10 +13,23 @@ type BranchDetailsProps = {
   branch?: any; // You can replace 'any' with a specific type for branch details
   onChange?: (index: number) => void;
   currentIndex?: number | null;
+  isFavoriteSelectionMode?: boolean;
+  isSavingFavorite?: boolean;
+  onSetFavorite?: (branch: any) => Promise<void> | void;
 };
 
 const BranchDetail = forwardRef<any, BranchDetailsProps>(
-  ({ branch, onChange, currentIndex }, ref) => {
+  (
+    {
+      branch,
+      onChange,
+      currentIndex,
+      isFavoriteSelectionMode = false,
+      isSavingFavorite = false,
+      onSetFavorite,
+    },
+    ref,
+  ) => {
     const [isOpen, setIsOpen] = useState(false);
     const snapPoints = useMemo(() => ["60%"], []);
 
@@ -107,6 +120,11 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
       onChange?.(index);
     };
 
+    const handleSetAsFavorite = async () => {
+      if (!branch || !onSetFavorite) return;
+      await onSetFavorite(branch);
+    };
+
     return (
       <BottomSheetModal
         ref={ref}
@@ -152,14 +170,21 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
           </View>
 
           <View style={{ paddingBottom: 16 }}>
+            {isFavoriteSelectionMode && (
+              <View style={{ marginBottom: 8 }}>
+                <SmallPrimaryButton
+                  buttonName={
+                    isSavingFavorite ? "Saving..." : "Set as Favorite"
+                  }
+                  onPress={handleSetAsFavorite}
+                  isDisabled={isSavingFavorite || !branch?.id}
+                />
+              </View>
+            )}
+
             <SmallPrimaryButton
               buttonName="Book Event"
               onPress={handleBookAppointment}
-              isFontSmall
-              buttonWidth="100%"
-              isCentered
-              isSticky
-              fontUsed={"font-kanitBold"}
             />
           </View>
         </BottomSheetView>

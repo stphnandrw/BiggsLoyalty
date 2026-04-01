@@ -1,5 +1,12 @@
 import BranchDetail from "@/src/components/features/branch-details";
+import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { getOutlets } from "@/src/services/api/outlets";
+import { addFavoriteLocation, checkUserExists } from "@/src/services/api/user";
+import { getItem, setItem } from "@/src/utils/asyncStorage";
+import {
+  clearFavoriteBranchSelectionMode,
+  getFavoriteBranchSelectionMode,
+} from "@/src/utils/favoriteBranch";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Mapbox, {
   Camera,
@@ -10,6 +17,7 @@ import Mapbox, {
   ShapeSource,
 } from "@rnmapbox/maps";
 import * as Location from "expo-location";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import {
@@ -71,6 +79,8 @@ function parseLongLat(longlat: string): [number, number] | null {
 }
 
 export default function Store() {
+  const params = useLocalSearchParams<{ mode?: string | string[] }>();
+
   function mapOutlet(outlet: OutletApi): MappedOutlet | null {
     const coordinate = parseLongLat(outlet.longlat);
     if (!coordinate) return null;
@@ -84,6 +94,8 @@ export default function Store() {
   const [isActive, setIsActive] = useState(false);
   const [routeGeoJSON, setRouteGeoJSON] =
     useState<GeoJSON.FeatureCollection | null>(null);
+  const [isFavoriteSelectionMode, setIsFavoriteSelectionMode] = useState(false);
+  const [isSavingFavorite, setIsSavingFavorite] = useState(false);
 
   const bottomSheetRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -91,21 +103,37 @@ export default function Store() {
   const [scrollViewWidth, setScrollViewWidth] = useState(0);
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
 
+  useFocusEffect(
+    useCallback(() => {
+      const loadSelectionMode = async () => {
+        const modeParam = Array.isArray(params.mode)
+          ? params.mode[0]
+          : params.mode;
+        const isSelectionFromParam = modeParam === "favorite";
+        const isSelectionFromStorage = await getFavoriteBranchSelectionMode();
+        setIsFavoriteSelectionMode(
+          isSelectionFromParam || isSelectionFromStorage,
+        );
+      };
+
+      loadSelectionMode();
+
+      return () => {};
+    }, [params.mode]),
+  );
+
   useEffect(() => {
     let mounted = true;
 
     const loadOutlets = async () => {
       try {
         const response = await getOutlets();
-        console.log("Raw Outlets API Response:", response);
         const data = Array.isArray(response) ? (response as OutletApi[]) : [];
         const mapped = data
           .map(mapOutlet)
           .filter((item): item is MappedOutlet => item !== null);
 
         if (!mounted) return;
-
-        console.log("Mapped Outlet Locations:", mapped);
 
         setOutletLocations(mapped);
         if (mapped.length > 0) {
@@ -226,13 +254,60 @@ export default function Store() {
     handleOpenDetails(nearest);
   };
 
+  const handleSetFavoriteBranch = async (branch: MappedOutlet) => {
+    try {
+      setIsSavingFavorite(true);
+
+      const storedUserData = await getItem("userData");
+      if (storedUserData) {
+        const parsedUser = JSON.parse(storedUserData);
+        const tagUid = parsedUser?.tag_uid;
+
+        if (tagUid) {
+          await addFavoriteLocation(tagUid, branch.id);
+        }
+
+        if (parsedUser?.phone_number) {
+          const refreshedUser = await checkUserExists(parsedUser.phone_number);
+          await setItem("userData", JSON.stringify(refreshedUser));
+        }
+      }
+
+      await clearFavoriteBranchSelectionMode();
+      setIsFavoriteSelectionMode(false);
+      bottomSheetRef.current?.dismiss?.();
+      Alert.alert("Favorite Updated", "Favorite branch has been set.", [
+        {
+          text: "OK",
+          onPress: () => router.push("/(tabs)/more"),
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to save favorite branch:", error);
+      Alert.alert("Error", "Unable to set favorite branch. Please try again.");
+    } finally {
+      setIsSavingFavorite(false);
+    }
+  };
+
+  const handleCancelFavoriteBranchSelection = async () => {
+    try {
+      await clearFavoriteBranchSelectionMode();
+      setIsFavoriteSelectionMode(false);
+      bottomSheetRef.current?.dismiss?.();
+      router.push("/(tabs)/more");
+    } catch (error) {
+      console.error("Failed to cancel favorite branch selection:", error);
+    }
+  };
+
   return (
     <GestureHandlerRootView className="flex-1">
       <SafeAreaView
         className="flex-1 items-center justify-center bg-black"
         edges={["top", "left", "right"]}
       >
-        <View className="w-full h-30 bg-white px-4">
+        <View className="w-full bg-white px-4 pb-2">
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -290,6 +365,14 @@ export default function Store() {
               </View>
             ))}
           </ScrollView>
+
+          {isFavoriteSelectionMode && (
+            <SmallPrimaryButton
+              buttonName="Cancel"
+              onPress={handleCancelFavoriteBranchSelection}
+              isDisabled={isSavingFavorite}
+            />
+          )}
         </View>
         <MapView
           style={{ flex: 1, width: "100%", height: "100%" }}
@@ -342,6 +425,9 @@ export default function Store() {
           onChange={handleSheetChanges}
           branch={location}
           currentIndex={currentSheetIndex}
+          isFavoriteSelectionMode={isFavoriteSelectionMode}
+          isSavingFavorite={isSavingFavorite}
+          onSetFavorite={handleSetFavoriteBranch}
         />
       </SafeAreaView>
     </GestureHandlerRootView>

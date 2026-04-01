@@ -33,4 +33,14 @@ class UserModel extends Model
     {
         return $this->update($tag_uid, ['fave_location' => $branch_code]);
     }
+
+    public function getFavoriteLocationByTagUid($tag_uid)
+    {
+        return $this->select('fave_location')->where('tag_uid', $tag_uid)->first();
+    }
+
+    public function getFavoriteMenuByTagUid($tag_uid)
+    {
+        return $this->select('fave_item')->where('tag_uid', $tag_uid)->first();
+    }
 }

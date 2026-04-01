@@ -244,6 +244,90 @@ class UserController extends BaseController
         return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to add branch']);
     }
 
+    public function getFavoriteBranchByCode()
+    {
+        $data = $this->request->getJSON();
+        $branch_code = $data->branch_code ?? null;
+
+        log_message('debug', 'Payload of getFavoriteBranchByCode: ' . json_encode($data));
+
+        if (!$branch_code || !is_string($branch_code)) {
+            log_message('error', 'Missing branch_code');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Branch code is required and must be a string']);
+        }
+
+        $branch = $this->branchModel->getBranchByCode($branch_code);
+
+        if (!$branch) {
+            log_message('error', 'Branch not found: ' . $branch_code);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Branch not found']);
+        }
+
+        return $this->response->setJSON($branch);
+    }
+
+    public function getFavoriteLocationByTagUid()
+    {
+        $data = $this->request->getJSON();
+        $tag_uid = $data->tag_uid ?? null;
+
+        if (!$tag_uid) {
+            log_message('error', 'Missing tag_uid');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
+        }
+
+        $favoriteLocation = $this->userModel->getFavoriteLocationByTagUid($tag_uid);
+
+        if (!$favoriteLocation) {
+            log_message('error', 'Favorite location not found for tag_uid: ' . $tag_uid);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Favorite location not found']);
+        }
+
+        return $this->response->setJSON($favoriteLocation);
+    }
+
+    public function getFavoriteMenuByCode()
+    {
+        $data = $this->request->getJSON();
+        $menu_code = $data->menu_code ?? null;
+
+        log_message('debug', 'Payload of getFavoriteMenuByCode: ' . json_encode($data));
+
+        if (!$menu_code || !is_string($menu_code)) {
+            log_message('error', 'Missing menu_code');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Menu code is required and must be a string']);
+        }
+
+        $menu = $this->menuModel->getMenuByCode($menu_code);
+
+        if (!$menu) {
+            log_message('error', 'Menu not found: ' . $menu_code);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Menu not found']);
+        }
+
+        return $this->response->setJSON($menu);
+    }
+
+    public function getFavoriteMenuByTagUid()
+    {
+        $data = $this->request->getJSON();
+        $tag_uid = $data->tag_uid ?? null;
+
+        if (!$tag_uid) {
+            log_message('error', 'Missing tag_uid');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
+        }
+
+        $favoriteMenu = $this->userModel->getFavoriteMenuByTagUid($tag_uid);
+
+        if (!$favoriteMenu) {
+            log_message('error', 'Favorite menu not found for tag_uid: ' . $tag_uid);
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Favorite menu not found']);
+        }
+
+        return $this->response->setJSON($favoriteMenu);
+    }
+
     public function updateUser()
     {
         $data = $this->request->getJSON();

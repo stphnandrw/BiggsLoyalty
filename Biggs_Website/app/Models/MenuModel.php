@@ -44,6 +44,11 @@ class MenuModel extends Model
         return $menuItem ? $menuItem['m_code'] : null;
     }
 
+    public function getMenuByCode($m_code)
+    {
+        return $this->where('m_code', $m_code)->first();
+    }
+
     public function getMenuCategories()
     {
         return $this->distinct()->select('position')->findAll();

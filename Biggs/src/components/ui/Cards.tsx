@@ -1,5 +1,5 @@
-import { FontAwesome6, Fontisto } from "@expo/vector-icons";
-import { useState } from "react";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import { Dimensions, Image, Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -46,7 +46,9 @@ interface ProductCardProps {
   price?: string;
   price2?: string;
   imageRef?: string;
+  showFavoriteAction?: boolean;
   isFavorited?: boolean;
+  isFavoriteActionDisabled?: boolean;
   onFavoriteToggle?: () => void;
   onAdd?: () => void;
 }
@@ -403,48 +405,85 @@ export function ProductCard({
   price,
   price2,
   imageRef,
+  showFavoriteAction = true,
   isFavorited = false,
+  isFavoriteActionDisabled = false,
   onFavoriteToggle,
   onAdd,
 }: ProductCardProps) {
   const [favorited, setFavorited] = useState(isFavorited);
 
+  useEffect(() => {
+    setFavorited(isFavorited);
+  }, [isFavorited]);
+
   const handleFavorite = () => {
-    setFavorited(!favorited);
+    if (isFavoriteActionDisabled || favorited) {
+      return;
+    }
     onFavoriteToggle?.();
   };
 
+  const handleCardPress = () => {
+    if (showFavoriteAction) {
+      handleFavorite();
+      return;
+    }
+
+    onAdd?.();
+  };
+
   return (
-    <View className="w-full h-72 rounded-lg overflow-hidden bg-[#1a1a1a] shadow-lg">
-      {/* Image area */}
-      <View className="w-full h-52 relative">
-        {imageRef ? (
-          <Image
-            source={{ uri: imageRef }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-full h-full items-center justify-center bg-[#2a2a2a]">
-            <Text className="text-6xl">🍷</Text>
-          </View>
-        )}
-
-        {/* Favorite button */}
-        <Pressable
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 items-center justify-center"
-          onPress={handleFavorite}
+    <Pressable
+      className="w-full h-72 rounded-lg shadow-lg overflow-hidden relative"
+      onPress={handleCardPress}
+      disabled={showFavoriteAction && (isFavoriteActionDisabled || favorited)}
+    >
+      {/* Image fills entire card */}
+      {imageRef ? (
+        <Image
+          source={{
+            uri: "https://biggs.ph/biggs_website/controls/uploads/" + imageRef,
+          }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          className="items-center justify-center bg-[#2a2a2a]"
         >
-          <Fontisto
-            name={favorited ? "heart" : "heart-alt"}
-            size={15}
-            color="#ef4444"
-          />
-        </Pressable>
-      </View>
+          <Text className="text-6xl">🍷</Text>
+        </View>
+      )}
 
-      {/* Bottom info bar */}
-      <View className="flex-row items-center justify-between px-4 py-3">
+      {/* Favorite action button */}
+      {showFavoriteAction && (
+        <View
+          className="absolute top-3 right-3 bg-darkBlue py-[2px] px-3 rounded-3xl border-4 border-saffron flex-row items-center"
+          style={{ opacity: isFavoriteActionDisabled || favorited ? 0.75 : 1 }}
+        >
+          <Text className="text-center font-kanitBold text-white">
+            {favorited ? "Selected" : "Select"}
+          </Text>
+        </View>
+      )}
+
+      {favorited && showFavoriteAction && (
+        <View className="absolute inset-0 bg-[#14284d]/65 items-center justify-center">
+          <View className="bg-saffron px-4 py-2 rounded-2xl border-2 border-darkBlue">
+            <Text className="text-darkBlue font-kanitBold uppercase tracking-wide">
+              Selected
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Info bar pinned to bottom */}
+      <View
+        style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}
+        className="flex-row items-center justify-between px-4 py-3 bg-black/50"
+      >
         <View className="flex-1 mr-2">
           <Text className="text-sm font-kanitBold text-white" numberOfLines={1}>
             {productName}
@@ -460,7 +499,6 @@ export function ProductCard({
             </Text>
           )}
         </View>
-
         <View className="items-end">
           <Text className="text-base font-extrabold text-yellow-400">
             {price}
@@ -468,6 +506,6 @@ export function ProductCard({
           {price2 && <Text className="text-xs text-gray-400">{price2}</Text>}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

@@ -1,13 +1,17 @@
 // components/CustomTabBar.tsx
 import { AuthRequiredBottomSheet } from "@/src/components/ui/Modal";
 import { isUserAuthenticated } from "@/src/utils/asyncStorage";
+import {
+  getFavoriteBranchSelectionMode,
+  getFavoriteMenuItemSelectionMode,
+} from "@/src/utils/favoriteBranch";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Pressable, View } from "react-native";
 
 const { width } = Dimensions.get("window");
-const TAB_COUNT = 4;
+const TAB_COUNT = 5;
 const TAB_WIDTH = width / TAB_COUNT;
 const LINE_WIDTH = TAB_WIDTH * 0.9; // Width of the indicator line
 
@@ -18,13 +22,19 @@ const iconMap: Record<
   index: { focused: "home", unfocused: "home-outline", size: 24 },
   "store-locator": { focused: "map", unfocused: "map-outline", size: 24 },
   more: { focused: "menu", unfocused: "menu-outline", size: 36 },
+  menu: { focused: "fast-food", unfocused: "fast-food-outline", size: 28 },
   promos: { focused: "pricetags", unfocused: "pricetags-outline", size: 22 },
 };
 
 const PROTECTED_TABS = new Set(["promos", "profile"]);
 
-export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+export default function CustomTabBar({
+  state,
+  navigation,
+  descriptors,
+}: BottomTabBarProps) {
   const [showAuthSheet, setShowAuthSheet] = useState(false);
+  const [tabsDisabled, setTabsDisabled] = useState(false);
 
   // Sliding line X position
   const lineX = useRef(
@@ -79,7 +89,30 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         }),
       ]).start();
     });
-  }, [state.index]);
+  }, [lineX, opacities, scales, state.index, state.routes, translateYs]);
+
+  useEffect(() => {
+    const loadTabDisabledState = async () => {
+      const activeRoute = state.routes[state.index];
+      const activeParams = descriptors[activeRoute.key]?.route?.params as
+        | { mode?: string | string[] }
+        | undefined;
+
+      const modeParam = Array.isArray(activeParams?.mode)
+        ? activeParams?.mode[0]
+        : activeParams?.mode;
+
+      const isFavoriteModeParam = modeParam === "favorite";
+      const isBranchSelectionMode = await getFavoriteBranchSelectionMode();
+      const isMenuSelectionMode = await getFavoriteMenuItemSelectionMode();
+
+      setTabsDisabled(
+        isFavoriteModeParam || isBranchSelectionMode || isMenuSelectionMode,
+      );
+    };
+
+    loadTabDisabledState();
+  }, [state.index, state.routes, descriptors]);
 
   return (
     <>
@@ -106,6 +139,10 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           const onPress = async () => {
             if (isFocused) return;
 
+            if (tabsDisabled) {
+              return;
+            }
+
             if (PROTECTED_TABS.has(route.name)) {
               const isLoggedIn = await isUserAuthenticated();
               if (!isLoggedIn) {
@@ -128,11 +165,13 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             <Pressable
               key={route.key}
               onPress={onPress}
+              disabled={tabsDisabled}
               style={{
                 flex: 1,
                 alignItems: "center",
                 justifyContent: "center",
                 height: "100%",
+                opacity: tabsDisabled ? 0.5 : 1,
               }}
             >
               <Animated.View

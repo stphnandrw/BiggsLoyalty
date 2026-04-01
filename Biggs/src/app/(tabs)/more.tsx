@@ -1,57 +1,154 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
 import { MiniPrimaryButton } from "@/src/components/ui/Buttons";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
+import {
+  getFavoriteBranchByCode,
+  getFavoriteLocationByTagUid,
+  getFavoriteMenuByCode,
+  getFavoriteMenuByTagUid,
+} from "@/src/services/api/user";
 import { getItem } from "@/src/utils/asyncStorage";
+import {
+  setFavoriteBranchSelectionMode,
+  setFavoriteMenuItemSelectionMode,
+} from "@/src/utils/favoriteBranch";
+import { parseAndRemoveOtherLines } from "@/src/utils/htmlParser";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
+  const [favoriteBranch, setFavoriteBranch] = useState<any>(null);
+  const [favoriteMenuItem, setFavoriteMenuItem] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await getItem("userData");
-        if (userData) {
-          setUser(JSON.parse(userData));
+  const parseBranchAddress = (description?: string) => {
+    if (!description) return "";
+
+    const cleanText = description
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?[^>]+(>|$)/g, "");
+
+    const lines = cleanText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    return lines[2] || lines[1] || "";
+  };
+
+  const loadProfileData = useCallback(async () => {
+    try {
+      const userData = await getItem("userData");
+
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+
+        if (parsedUser.tag_uid) {
+          try {
+            const branch_code = await getFavoriteLocationByTagUid(
+              parsedUser.tag_uid,
+            );
+
+            if (branch_code) {
+              const branch = await getFavoriteBranchByCode(branch_code);
+              setFavoriteBranch(branch);
+            }
+          } catch {
+            setFavoriteBranch(null);
+          }
+
+          try {
+            const menu_code = await getFavoriteMenuByTagUid(parsedUser.tag_uid);
+
+            if (menu_code) {
+              const menu = await getFavoriteMenuByCode(menu_code);
+              setFavoriteMenuItem(menu);
+            } else {
+              setFavoriteMenuItem(null);
+            }
+          } catch {
+            setFavoriteMenuItem(null);
+          }
         } else {
-          setUser(null);
+          setFavoriteBranch(null);
+          setFavoriteMenuItem(null);
         }
-      } catch (error) {
+      } else {
         setUser(null);
-      } finally {
-        setIsLoading(false);
+        setFavoriteBranch(null);
+        setFavoriteMenuItem(null);
       }
-    };
-    loadUser();
+    } catch {
+      setUser(null);
+      setFavoriteBranch(null);
+      setFavoriteMenuItem(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+
+      const loadUser = async () => {
+        await loadProfileData();
+      };
+
+      loadUser();
+
+      return () => {};
+    }, [loadProfileData]),
+  );
+
+  const handleChangeFavoriteLocation = async () => {
+    try {
+      await setFavoriteBranchSelectionMode(true);
+      router.push("/(tabs)/store-locator?mode=favorite");
+    } catch (error) {
+      console.error("Failed to enable favorite branch selection mode:", error);
+    }
+  };
+
+  const handleChangeFavoriteMenu = async () => {
+    try {
+      await setFavoriteMenuItemSelectionMode(true);
+      router.push("/(tabs)/menu?mode=favorite");
+    } catch (error) {
+      console.error("Failed to enable favorite menu selection mode:", error);
+    }
+  };
 
   const userData = {
     title: user?.name || "Guest User",
     data1: user?.phone_number || "No phone number",
     data2: user?.email || null,
+    data3: user?.tag_uid,
+  };
+
+  const favoriteLocation = {
+    title: favoriteBranch?.title || "No favorite branch",
+    data1:
+      parseBranchAddress(favoriteBranch?.description) ||
+      "Tap Change to pick from Store Locator",
+  };
+
+  const favoriteMenu = {
+    title:
+      parseAndRemoveOtherLines(favoriteMenuItem?.m_title) || "No favorite menu",
+    data1:
+      favoriteMenuItem?.m_desc === null ||
+      "Tap Change to pick from Store Locator",
   };
 
   console.log("User data in Profile screen:", userData);
-
-  // Replace with actual favorite location from user context/state
-  const favoriteLocation = {
-    title: "SM City Naga",
-    data1: "Diversion Road, Naga City, Camarines Sur",
-  };
-
-  // Replace with actual favorite menu from user context/state
-  const favoriteMenu = {
-    title: "Chicken Inasal Set",
-    data1: "Mang Inasal",
-    data2: "1/4 chicken, rice, soup",
-  };
 
   return (
     <SafeAreaView
@@ -107,7 +204,7 @@ export default function Profile() {
                   icon={<Feather name="map-pin" size={16} color="#1a8fc4" />}
                   label="Favorite Location"
                   data={favoriteLocation}
-                  onPress={() => router.push("/(more)/favorite-location")}
+                  onPress={handleChangeFavoriteLocation}
                 />
                 <View className="h-[0.5px] bg-gray-100 mx-4" />
                 <ItemWithButton
@@ -115,7 +212,7 @@ export default function Profile() {
                   icon={<Feather name="heart" size={16} color="#1a8fc4" />}
                   label="Favorite Menu"
                   data={favoriteMenu}
-                  onPress={() => router.push("/(more)/favorite-menu")}
+                  onPress={handleChangeFavoriteMenu}
                 />
               </View>
 
@@ -227,9 +324,11 @@ function ItemWithButton({
         <Text className="text-gray-800 text-sm font-kanitMedium">
           {data.title}
         </Text>
-        <Text className="text-gray-400 text-xs mt-0.5" numberOfLines={1}>
-          {data.data1}
-        </Text>
+        {data.data1 && (
+          <Text className="text-gray-400 text-xs mt-0.5" numberOfLines={1}>
+            {data.data1}
+          </Text>
+        )}
         {data.data2 && (
           <Text className="text-gray-400 text-xs" numberOfLines={1}>
             {data.data2}

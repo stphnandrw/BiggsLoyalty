@@ -24,14 +24,19 @@ class BranchModel extends Model
         'has_venue_hall'
     ];
 
-        public function getAllBranches()
-        {
-            return $this->findAll();
-        }
+    public function getAllBranches()
+    {
+        return $this->findAll();
+    }
 
-        public function getBranchCodeById($id)
-        {
-            $branch = $this->where('id', $id)->first();
-            return $branch ? $branch['code'] : null;
-        }
+    public function getBranchCodeById($id)
+    {
+        $branch = $this->where('id', $id)->first();
+        return $branch ? $branch['code'] : null;
+    }
+
+    public function getBranchByCode($code)
+    {
+        return $this->where('code', $code)->first();
+    }
 }
