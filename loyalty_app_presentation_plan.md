@@ -134,30 +134,6 @@
 > **Tip:** Use projected numbers or benchmarks from similar restaurants if available. Simple bar charts or icon-based stats work well here.
 
 ---
-
-#### Slide 11: Rollout Plan & Next Steps
-
-**Goal:** Give the team a clear, executable path forward.
-
-**Content:**
-
-| Phase | Activity | Timeline |
-|-------|----------|----------|
-| Phase 1: Build | App development, QA, internal testing | Month 1–3 |
-| Phase 2: Launch | Soft launch at pilot branch, collect feedback | Month 4 |
-| Phase 3: Scale | Full rollout, marketing push, loyalty migration | Month 5–6 |
-
-**Metrics to Track:**
-- App download rate
-- Daily/Monthly active users
-- Voucher redemption rate
-- Points earned per customer
-- Repeat visit frequency (app users vs. non-users)
-
-> **Tip:** A simple 3-phase roadmap (Build → Launch → Scale) keeps this clear and actionable for all stakeholders.
-
----
-
 ### Phase 5 — Close
 
 ---

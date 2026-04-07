@@ -47,3 +47,10 @@ $routes->group('menu', function ($routes) {
     $routes->get('/', 'MenuController::getAllMenus');
     $routes->get('categories', 'MenuController::getMenuCategories');
 });
+
+$routes->group('booking', function ($routes) {
+    $routes->post('packages', 'BookingController::getBranchPackages');
+    $routes->post('slots', 'BookingController::getAvailableSlots');
+    $routes->post('create', 'BookingController::createBooking');
+    $routes->post('my-bookings', 'BookingController::getMyBookings');
+});

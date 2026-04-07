@@ -38,7 +38,13 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
       (ref as { current: any })?.current?.dismiss();
       // Wait for the modal to dismiss before navigating
       setTimeout(() => {
-        router.push(`/book-appointment?branchId=${branch?.id || ""}`);
+        router.push({
+          pathname: "/(booking)/book-appointment",
+          params: {
+            branchId: String(branch?.id || ""),
+            branchTitle: branch?.title || "",
+          },
+        });
       }, 300);
     };
 

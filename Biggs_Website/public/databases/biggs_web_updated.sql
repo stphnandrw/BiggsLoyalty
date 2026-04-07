@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 07, 2026 at 02:24 PM
+-- Generation Time: Apr 07, 2026 at 04:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -79,15 +79,12 @@ INSERT INTO `biggs_branches` (`id`, `title`, `code`, `description`, `images`, `c
 --
 
 CREATE TABLE `bookings` (
-  `id` int(11) NOT NULL,
+  `booking_id` int(11) NOT NULL,
   `slot_id` int(11) NOT NULL,
-  `branch_id` int(11) NOT NULL,
-  `user_name` varchar(100) NOT NULL,
-  `user_email` varchar(100) DEFAULT NULL,
-  `user_phone` varchar(30) DEFAULT NULL,
+  `package_id` int(11) NOT NULL,
+  `tag_uid` varchar(32) NOT NULL,
   `party_size` int(11) NOT NULL DEFAULT 1,
   `note` text DEFAULT NULL,
-  `promo_id` int(11) DEFAULT NULL,
   `status` enum('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -100,7 +97,7 @@ CREATE TABLE `bookings` (
 --
 
 CREATE TABLE `booking_slots` (
-  `id` int(11) NOT NULL,
+  `slot_id` int(11) NOT NULL,
   `branch_id` int(11) NOT NULL,
   `slot_date` date NOT NULL,
   `time_start` time NOT NULL,
@@ -312,6 +309,19 @@ INSERT INTO `otp` (`otp_id`, `tag_uid`, `phone_number`, `otp_code`, `expires_at`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `packages`
+--
+
+CREATE TABLE `packages` (
+  `package_id` int(11) NOT NULL,
+  `package_name` varchar(100) NOT NULL,
+  `details` text NOT NULL,
+  `price` double(2,0) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `promos`
 --
 
@@ -377,17 +387,17 @@ ALTER TABLE `biggs_branches`
 -- Indexes for table `bookings`
 --
 ALTER TABLE `bookings`
-  ADD PRIMARY KEY (`id`),
+  ADD PRIMARY KEY (`booking_id`),
   ADD KEY `idx_bookings_slot` (`slot_id`),
-  ADD KEY `idx_bookings_branch` (`branch_id`),
+  ADD KEY `idx_bookings_branch` (`package_id`),
   ADD KEY `idx_bookings_status` (`status`),
-  ADD KEY `idx_bookings_promo` (`promo_id`);
+  ADD KEY `tag_uid` (`tag_uid`);
 
 --
 -- Indexes for table `booking_slots`
 --
 ALTER TABLE `booking_slots`
-  ADD PRIMARY KEY (`id`),
+  ADD PRIMARY KEY (`slot_id`),
   ADD UNIQUE KEY `uq_branch_slot` (`branch_id`,`slot_date`,`time_start`),
   ADD KEY `idx_slots_branch_date` (`branch_id`,`slot_date`);
 
@@ -427,6 +437,12 @@ ALTER TABLE `otp`
   ADD KEY `idx_otp_tag_uid` (`tag_uid`);
 
 --
+-- Indexes for table `packages`
+--
+ALTER TABLE `packages`
+  ADD PRIMARY KEY (`package_id`);
+
+--
 -- Indexes for table `promos`
 --
 ALTER TABLE `promos`
@@ -448,13 +464,13 @@ ALTER TABLE `user_tokens`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `booking_slots`
 --
 ALTER TABLE `booking_slots`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `slot_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `btc_loyalty`
@@ -481,6 +497,12 @@ ALTER TABLE `otp`
   MODIFY `otp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `packages`
+--
+ALTER TABLE `packages`
+  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `promos`
 --
 ALTER TABLE `promos`
@@ -500,40 +522,9 @@ ALTER TABLE `user_tokens`
 -- Constraints for table `bookings`
 --
 ALTER TABLE `bookings`
-  ADD CONSTRAINT `fk_bookings_branch` FOREIGN KEY (`branch_id`) REFERENCES `biggs_branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_bookings_promo` FOREIGN KEY (`promo_id`) REFERENCES `promos` (`promo_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_bookings_slot` FOREIGN KEY (`slot_id`) REFERENCES `booking_slots` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `booking_slots`
---
-ALTER TABLE `booking_slots`
-  ADD CONSTRAINT `fk_slots_branch` FOREIGN KEY (`branch_id`) REFERENCES `biggs_branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `btc_loyalty`
---
-ALTER TABLE `btc_loyalty`
-  ADD CONSTRAINT `btc_loyalty_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `favorites`
---
-ALTER TABLE `favorites`
-  ADD CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`promo_id`) REFERENCES `promos` (`promo_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `otp`
---
-ALTER TABLE `otp`
-  ADD CONSTRAINT `otp_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `user_tokens`
---
-ALTER TABLE `user_tokens`
-  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `packages` (`package_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`slot_id`) REFERENCES `booking_slots` (`slot_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `bookings_ibfk_3` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -1,11 +1,59 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
-import { Text, View } from "react-native";
+import { BookingRecord, getMyBookings } from "@/src/services/api/bookings";
+import { getItem } from "@/src/utils/asyncStorage";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type StoredUser = {
+  tag_uid: string;
+};
+
+function statusColor(status?: string) {
+  if (status === "confirmed") return "#166534";
+  if (status === "cancelled") return "#991b1b";
+  return "#92400e";
+}
+
 export default function ScheduledEvents() {
+  const [tagUid, setTagUid] = useState("");
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const raw = await getItem("userData");
+      if (!raw) return;
+
+      try {
+        const user = JSON.parse(raw) as StoredUser;
+        setTagUid(user.tag_uid || "");
+      } catch (error) {
+        console.error("Failed to parse userData for scheduled events", error);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  const {
+    data: bookingsResponse,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["myBookings", tagUid],
+    queryFn: () => getMyBookings(tagUid),
+    enabled: !!tagUid,
+  });
+
+  const bookings: BookingRecord[] = useMemo(() => {
+    const data = bookingsResponse?.data;
+    return Array.isArray(data) ? data : [];
+  }, [bookingsResponse]);
+
   return (
     <SafeAreaView
-      className="flex-1 items-center justify-center bg-black"
+      className="flex-1 bg-black"
       edges={["top", "left", "right"]}
     >
       <View className="w-full h-full bg-white">
@@ -15,14 +63,64 @@ export default function ScheduledEvents() {
             Scheduled Events
           </Text>
         </View>
-        <View className="w-full h-auto items-center justify-center mb-6 px-6">
-          <Text className="text-gray-700 text-base leading-relaxed text-center">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea
-            consequatur autem vitae distinctio et saepe doloremque cupiditate
-            quae provident reiciendis obcaecati cumque voluptas fugit, maiores
-            nesciunt vero expedita labore ullam.
-          </Text>
-        </View>
+
+        <ScrollView
+          className="px-4 mt-6"
+          contentContainerStyle={{ paddingBottom: 40 }}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+        >
+          {isLoading ? (
+            <Text className="text-gray-600 font-kanit">Loading your events...</Text>
+          ) : bookings.length === 0 ? (
+            <Text className="text-gray-600 font-kanit">No scheduled events yet.</Text>
+          ) : (
+            bookings.map((booking) => (
+              <View
+                key={booking.id}
+                className="rounded-xl border border-gray-200 bg-white p-4 mb-3"
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-kanitBold text-darkBlue text-base">
+                    Booking #{booking.id}
+                  </Text>
+                  <Text
+                    className="font-kanitBold uppercase text-xs"
+                    style={{ color: statusColor(booking.status) }}
+                  >
+                    {booking.status || "pending"}
+                  </Text>
+                </View>
+
+                <Text className="font-kanit text-gray-700 mt-2">
+                  Branch ID: {booking.branch_id}
+                </Text>
+
+                {!!booking.package_name && (
+                  <Text className="font-kanit text-gray-700">
+                    Package: {booking.package_name}
+                  </Text>
+                )}
+
+                <Text className="font-kanit text-gray-700">
+                  Schedule: {booking.slot_date || "-"} {booking.time_start || ""}
+                  {booking.time_end ? ` - ${booking.time_end}` : ""}
+                </Text>
+
+                <Text className="font-kanit text-gray-700">
+                  Party Size: {booking.party_size || 0}
+                </Text>
+
+                {!!booking.created_at && (
+                  <Text className="font-kanit text-gray-500 text-xs mt-1">
+                    Requested: {booking.created_at}
+                  </Text>
+                )}
+              </View>
+            ))
+          )}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
