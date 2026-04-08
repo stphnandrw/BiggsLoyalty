@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 07, 2026 at 04:02 PM
+-- Generation Time: Apr 08, 2026 at 10:53 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -83,12 +83,18 @@ CREATE TABLE `bookings` (
   `slot_id` int(11) NOT NULL,
   `package_id` int(11) NOT NULL,
   `tag_uid` varchar(32) NOT NULL,
-  `party_size` int(11) NOT NULL DEFAULT 1,
   `note` text DEFAULT NULL,
   `status` enum('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`booking_id`, `slot_id`, `package_id`, `tag_uid`, `note`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, '04A6AD40C22A81', '', 'pending', '2026-04-08 13:44:02', '2026-04-08 15:20:01');
 
 -- --------------------------------------------------------
 
@@ -102,11 +108,23 @@ CREATE TABLE `booking_slots` (
   `slot_date` date NOT NULL,
   `time_start` time NOT NULL,
   `time_end` time NOT NULL,
-  `max_seats` int(11) NOT NULL DEFAULT 20,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `is_available` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `booking_slots`
+--
+
+INSERT INTO `booking_slots` (`slot_id`, `branch_id`, `slot_date`, `time_start`, `time_end`, `is_available`, `created_at`, `updated_at`) VALUES
+(1, 14, '2026-04-08', '13:00:00', '15:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 13:19:47'),
+(2, 28, '2026-05-10', '18:00:00', '21:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14'),
+(3, 31, '2026-05-11', '14:00:00', '17:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14'),
+(4, 34, '2026-05-11', '09:00:00', '12:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14'),
+(5, 35, '2026-05-12', '11:00:00', '14:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14'),
+(6, 44, '2026-05-12', '15:00:00', '18:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14'),
+(7, 51, '2026-05-13', '19:00:00', '22:00:00', 1, '2026-04-08 09:59:14', '2026-04-08 09:59:14');
 
 -- --------------------------------------------------------
 
@@ -162,29 +180,25 @@ INSERT INTO `btc_profile` (`tag_uid`, `phone_number`, `email`, `name`, `birthday
 -- --------------------------------------------------------
 
 --
--- Table structure for table `favorites`
+-- Table structure for table `claimed_vouchers`
 --
 
-CREATE TABLE `favorites` (
-  `favorite_id` int(11) NOT NULL,
+CREATE TABLE `claimed_vouchers` (
+  `claimed_voucher_id` int(11) NOT NULL,
   `tag_uid` varchar(32) NOT NULL,
-  `promo_id` int(11) DEFAULT NULL,
-  `menu_id` int(11) DEFAULT NULL,
-  `date_redeemed` datetime DEFAULT NULL
+  `voucher_id` int(11) DEFAULT NULL,
+  `claimed_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `favorites`
+-- Dumping data for table `claimed_vouchers`
 --
 
-INSERT INTO `favorites` (`favorite_id`, `tag_uid`, `promo_id`, `menu_id`, `date_redeemed`) VALUES
-(26, '04A6AD40C22A81', 9, NULL, NULL),
-(29, '04A6AD40C22A81', 12, NULL, NULL),
-(33, '04A6AD40C22A81', 4, NULL, NULL),
-(37, '04A6AD40C22A81', 3, NULL, NULL),
-(38, '04A6AD40C22A81', 6, NULL, NULL),
-(39, '04A6AD40C22A81', 2, NULL, NULL),
-(40, '04A6AD40C22A81', 1, NULL, NULL);
+INSERT INTO `claimed_vouchers` (`claimed_voucher_id`, `tag_uid`, `voucher_id`, `claimed_at`) VALUES
+(1, '04A6AD40C22A81', 5, '2026-04-08 13:46:14'),
+(2, '04A6AD40C22A81', 1, '2026-04-08 08:01:00'),
+(3, '04A6AD40C22A81', 2, NULL),
+(4, '04A6AD40C22A81', 3, NULL);
 
 -- --------------------------------------------------------
 
@@ -314,45 +328,21 @@ INSERT INTO `otp` (`otp_id`, `tag_uid`, `phone_number`, `otp_code`, `expires_at`
 
 CREATE TABLE `packages` (
   `package_id` int(11) NOT NULL,
+  `branch_id` int(11) NOT NULL,
   `package_name` varchar(100) NOT NULL,
   `details` text NOT NULL,
+  `pax_size` int(11) NOT NULL,
   `price` double(2,0) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `promos`
+-- Dumping data for table `packages`
 --
 
-CREATE TABLE `promos` (
-  `promo_id` int(11) NOT NULL,
-  `promo_name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `required_points` int(11) NOT NULL,
-  `start_date` datetime DEFAULT NULL,
-  `end_date` datetime DEFAULT NULL,
-  `image_url` text NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `promos`
---
-
-INSERT INTO `promos` (`promo_id`, `promo_name`, `description`, `required_points`, `start_date`, `end_date`, `image_url`, `created_at`) VALUES
-(1, '2pc Chicken w/ Rice Discount', 'Enjoy 2pc chicken with rice at a discounted price', 120, '2026-03-27 14:37:23', '2026-04-16 14:37:23', 'chicken_discount.png', '2026-03-27 14:37:23'),
-(2, 'Family Chicken Bundle', 'Perfect for sharing! 6pc chicken bundle', 300, '2026-03-27 14:37:23', '2026-04-26 14:37:23', 'family_bundle.png', '2026-03-27 14:37:23'),
-(3, 'Breakfast Silog Meal', 'Start your day with a delicious silog meal', 80, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'silog.png', '2026-03-27 14:37:23'),
-(4, 'Free Coffee Upgrade', 'Upgrade your drink to coffee for free', 50, '2026-03-27 14:37:23', '2026-04-06 14:37:23', 'coffee_upgrade.png', '2026-03-27 14:37:23'),
-(5, 'Cheesy Burger Combo', 'Burger with fries and drink', 130, '2026-03-27 14:37:23', '2026-04-21 14:37:23', 'burger_combo.png', '2026-03-27 14:37:23'),
-(6, 'Double Patty Burger', 'Double patty for double satisfaction', 160, '2026-03-27 14:37:23', '2026-04-16 14:37:23', 'double_burger.png', '2026-03-27 14:37:23'),
-(7, 'Spaghetti + Drink Combo', 'Classic spaghetti with refreshing drink', 110, '2026-03-27 14:37:23', '2026-04-14 14:37:23', 'spag_combo.png', '2026-03-27 14:37:23'),
-(8, 'Snack Attack Bundle', 'Fries, nuggets, and drinks bundle', 140, '2026-03-27 14:37:23', '2026-04-18 14:37:23', 'snack_bundle.png', '2026-03-27 14:37:23'),
-(9, 'Summer Halo-Halo Treat', 'Cool down with halo-halo special', 90, '2026-03-27 14:37:23', '2026-04-08 14:37:23', 'halo_halo.png', '2026-03-27 14:37:23'),
-(10, 'Holiday Feast Bundle', 'Limited holiday meal bundle', 350, '2026-03-27 14:37:23', '2026-05-06 14:37:23', 'holiday_bundle.png', '2026-03-27 14:37:23'),
-(11, 'Free Fries Reward', 'Claim your free fries', 60, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'free_fries.png', '2026-03-27 14:37:23'),
-(12, 'Free Drink Reward', 'Free regular drink reward', 40, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'free_drink.png', '2026-03-27 14:37:23');
+INSERT INTO `packages` (`package_id`, `branch_id`, `package_name`, `details`, `pax_size`, `price`) VALUES
+(1, 14, 'Classic Party A', 'Chicken & Spaghetti with Iced Tea (Minimum 30 pax)', 10, 99),
+(2, 14, 'Classic Party B', 'Burger Steak, Rice, & Macaroni Salad (Minimum 30 pax)', 20, 99),
+(3, 14, 'Premium Celebration', 'Chicken, Spaghetti, Burger, and Unlimited Drinks', 30, 99);
 
 -- --------------------------------------------------------
 
@@ -373,6 +363,43 @@ CREATE TABLE `user_tokens` (
 INSERT INTO `user_tokens` (`token_id`, `tag_uid`, `expo_push_token`) VALUES
 (1, '04A6AD40C22A81', 'ExponentPushToken[miud_PFC7DITJHLfC7oYl2]');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vouchers`
+--
+
+CREATE TABLE `vouchers` (
+  `voucher_id` int(11) NOT NULL,
+  `voucher_name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `required_points` int(11) NOT NULL,
+  `beginning_stock` int(11) NOT NULL DEFAULT 0,
+  `claimed_count` int(11) NOT NULL DEFAULT 0,
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `image_url` text NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `vouchers`
+--
+
+INSERT INTO `vouchers` (`voucher_id`, `voucher_name`, `description`, `required_points`, `beginning_stock`, `claimed_count`, `start_date`, `end_date`, `image_url`, `created_at`) VALUES
+(1, '2pc Chicken w/ Rice Discount', 'Enjoy 2pc chicken with rice at a discounted price', 120, 100, 2, '2026-03-27 14:37:23', '2026-04-16 14:37:23', 'chicken_discount.png', '2026-03-27 14:37:23'),
+(2, 'Family Chicken Bundle', 'Perfect for sharing! 6pc chicken bundle', 300, 100, 1, '2026-03-27 14:37:23', '2026-04-26 14:37:23', 'family_bundle.png', '2026-03-27 14:37:23'),
+(3, 'Breakfast Silog Meal', 'Start your day with a delicious silog meal', 80, 100, 1, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'silog.png', '2026-03-27 14:37:23'),
+(4, 'Free Coffee Upgrade', 'Upgrade your drink to coffee for free', 50, 100, 0, '2026-03-27 14:37:23', '2026-04-06 14:37:23', 'coffee_upgrade.png', '2026-03-27 14:37:23'),
+(5, 'Cheesy Burger Combo', 'Burger with fries and drink', 130, 100, 1, '2026-03-27 14:37:23', '2026-04-21 14:37:23', 'burger_combo.png', '2026-03-27 14:37:23'),
+(6, 'Double Patty Burger', 'Double patty for double satisfaction', 160, 100, 0, '2026-03-27 14:37:23', '2026-04-16 14:37:23', 'double_burger.png', '2026-03-27 14:37:23'),
+(7, 'Spaghetti + Drink Combo', 'Classic spaghetti with refreshing drink', 110, 100, 0, '2026-03-27 14:37:23', '2026-04-14 14:37:23', 'spag_combo.png', '2026-03-27 14:37:23'),
+(8, 'Snack Attack Bundle', 'Fries, nuggets, and drinks bundle', 140, 100, 0, '2026-03-27 14:37:23', '2026-04-18 14:37:23', 'snack_bundle.png', '2026-03-27 14:37:23'),
+(9, 'Summer Halo-Halo Treat', 'Cool down with halo-halo special', 90, 100, 0, '2026-03-27 14:37:23', '2026-04-08 14:37:23', 'halo_halo.png', '2026-03-27 14:37:23'),
+(10, 'Holiday Feast Bundle', 'Limited holiday meal bundle', 350, 100, 0, '2026-03-27 14:37:23', '2026-05-06 14:37:23', 'holiday_bundle.png', '2026-03-27 14:37:23'),
+(11, 'Free Fries Reward', 'Claim your free fries', 60, 100, 0, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'free_fries.png', '2026-03-27 14:37:23'),
+(12, 'Free Drink Reward', 'Free regular drink reward', 40, 100, 0, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'free_drink.png', '2026-03-27 14:37:23');
+
 --
 -- Indexes for dumped tables
 --
@@ -381,6 +408,7 @@ INSERT INTO `user_tokens` (`token_id`, `tag_uid`, `expo_push_token`) VALUES
 -- Indexes for table `biggs_branches`
 --
 ALTER TABLE `biggs_branches`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_biggs_branches_id` (`id`);
 
 --
@@ -416,12 +444,12 @@ ALTER TABLE `btc_profile`
   ADD UNIQUE KEY `unique_phone` (`phone_number`);
 
 --
--- Indexes for table `favorites`
+-- Indexes for table `claimed_vouchers`
 --
-ALTER TABLE `favorites`
-  ADD PRIMARY KEY (`favorite_id`),
-  ADD KEY `promo_id` (`promo_id`),
-  ADD KEY `idx_favorites_tag_uid` (`tag_uid`);
+ALTER TABLE `claimed_vouchers`
+  ADD PRIMARY KEY (`claimed_voucher_id`),
+  ADD KEY `voucher_id` (`voucher_id`),
+  ADD KEY `idx_claimed_vouchers_tag_uid` (`tag_uid`);
 
 --
 -- Indexes for table `menu`
@@ -440,14 +468,8 @@ ALTER TABLE `otp`
 -- Indexes for table `packages`
 --
 ALTER TABLE `packages`
-  ADD PRIMARY KEY (`package_id`);
-
---
--- Indexes for table `promos`
---
-ALTER TABLE `promos`
-  ADD PRIMARY KEY (`promo_id`),
-  ADD KEY `idx_promos_promo_id` (`promo_id`);
+  ADD PRIMARY KEY (`package_id`),
+  ADD KEY `branch_id` (`branch_id`);
 
 --
 -- Indexes for table `user_tokens`
@@ -457,6 +479,13 @@ ALTER TABLE `user_tokens`
   ADD KEY `idx_tokens_tag_uid` (`tag_uid`);
 
 --
+-- Indexes for table `vouchers`
+--
+ALTER TABLE `vouchers`
+  ADD PRIMARY KEY (`voucher_id`),
+  ADD KEY `idx_vouchers_voucher_id` (`voucher_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -464,13 +493,13 @@ ALTER TABLE `user_tokens`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `booking_slots`
 --
 ALTER TABLE `booking_slots`
-  MODIFY `slot_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `slot_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `btc_loyalty`
@@ -479,10 +508,10 @@ ALTER TABLE `btc_loyalty`
   MODIFY `loyalty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `favorites`
+-- AUTO_INCREMENT for table `claimed_vouchers`
 --
-ALTER TABLE `favorites`
-  MODIFY `favorite_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+ALTER TABLE `claimed_vouchers`
+  MODIFY `claimed_voucher_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `menu`
@@ -500,19 +529,19 @@ ALTER TABLE `otp`
 -- AUTO_INCREMENT for table `packages`
 --
 ALTER TABLE `packages`
-  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `promos`
---
-ALTER TABLE `promos`
-  MODIFY `promo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user_tokens`
 --
 ALTER TABLE `user_tokens`
   MODIFY `token_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `vouchers`
+--
+ALTER TABLE `vouchers`
+  MODIFY `voucher_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables
@@ -525,6 +554,43 @@ ALTER TABLE `bookings`
   ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `packages` (`package_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`slot_id`) REFERENCES `booking_slots` (`slot_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `bookings_ibfk_3` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+--
+-- Constraints for table `booking_slots`
+--
+ALTER TABLE `booking_slots`
+  ADD CONSTRAINT `fk_slots_branch` FOREIGN KEY (`branch_id`) REFERENCES `biggs_branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `btc_loyalty`
+--
+ALTER TABLE `btc_loyalty`
+  ADD CONSTRAINT `btc_loyalty_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `claimed_vouchers`
+--
+ALTER TABLE `claimed_vouchers`
+  ADD CONSTRAINT `claimed_vouchers_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `claimed_vouchers_ibfk_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`voucher_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `otp`
+--
+ALTER TABLE `otp`
+  ADD CONSTRAINT `otp_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `packages`
+--
+ALTER TABLE `packages`
+  ADD CONSTRAINT `packages_ibfk_1` FOREIGN KEY (`branch_id`) REFERENCES `biggs_branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -1,9 +1,9 @@
-// components/CustomTabBar.tsx
+﻿// components/CustomTabBar.tsx
 import { AuthRequiredBottomSheet } from "@/src/components/ui/Modal";
 import { isUserAuthenticated } from "@/src/utils/asyncStorage";
 import {
-  getFavoriteBranchSelectionMode,
-  getFavoriteMenuItemSelectionMode,
+    getFavoriteBranchSelectionMode,
+    getFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -23,10 +23,10 @@ const iconMap: Record<
   "store-locator": { focused: "map", unfocused: "map-outline", size: 24 },
   more: { focused: "menu", unfocused: "menu-outline", size: 36 },
   menu: { focused: "fast-food", unfocused: "fast-food-outline", size: 28 },
-  promos: { focused: "pricetags", unfocused: "pricetags-outline", size: 22 },
+  vouchers: { focused: "pricetags", unfocused: "pricetags-outline", size: 22 },
 };
 
-const PROTECTED_TABS = new Set(["promos", "profile"]);
+const PROTECTED_TABS = new Set(["vouchers", "profile"]);
 
 export default function CustomTabBar({
   state,

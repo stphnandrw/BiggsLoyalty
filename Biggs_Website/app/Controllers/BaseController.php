@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 
 use App\Models\UserModel;
 use App\Models\UserTokensModel;
-use App\Models\PromoModel;
+use App\Models\VoucherModel;
 use App\Models\FavoriteModel;
 use App\Models\OtpModel;
 use App\Models\BtcLoyaltyModel;
@@ -41,7 +41,7 @@ abstract class BaseController extends Controller
     // protected $session;
     protected $userModel;
     protected $userTokensModel;
-    protected $promoModel;
+    protected $voucherModel;
     protected $favoriteModel;
     protected $otpModel;
     protected $btcLoyaltyModel;
@@ -66,7 +66,7 @@ abstract class BaseController extends Controller
 
         $this->userModel = new UserModel();
         $this->userTokensModel = new UserTokensModel();
-        $this->promoModel = new PromoModel();
+        $this->voucherModel = new VoucherModel();
         $this->favoriteModel = new FavoriteModel();
         $this->otpModel = new OtpModel();
         $this->btcLoyaltyModel = new BtcLoyaltyModel();

@@ -28,13 +28,13 @@ export type CarouselItem = {
   title?: string;
   /** Shown below the title in portrait mode */
   subtitle?: string;
-  /** Body description — used in promo variant */
+  /** Body description - used in voucher variant */
   description?: string;
-  /** CTA button label — used in promo variant */
+  /** CTA button label - used in voucher variant */
   ctaLabel?: string;
 };
 
-export type CarouselVariant = "landscape" | "portrait" | "promo";
+export type CarouselVariant = "landscape" | "portrait" | "voucher";
 
 export type AppCarouselProps = {
   data: CarouselItem[];
@@ -42,7 +42,7 @@ export type AppCarouselProps = {
   /**
    * "landscape" — wide/horizontal slides (default).
    * "portrait"  — tall cards shown 1-at-a-time with peek of adjacent slides.
-   * "promo"     — structured card: image top, title + description middle, CTA bottom.
+   * "voucher"   - structured card: image top, title + description middle, CTA bottom.
    */
   variant?: CarouselVariant;
 
@@ -52,7 +52,7 @@ export type AppCarouselProps = {
    * Aspect ratio used to derive slide height.
    * - landscape default: 1.5  (3:2, wider than tall)
    * - portrait  default: 0.65 (2:3, taller than wide)
-   * - promo: ignored; card height is fixed
+   * - voucher: ignored; card height is fixed
    */
   aspectRatio?: number;
 
@@ -67,7 +67,7 @@ export type AppCarouselProps = {
   /** Called when a slide is pressed */
   onItemPress?: (item: CarouselItem, index: number) => void;
 
-  /** Called when the CTA button is pressed — promo variant only */
+  /** Called when the CTA button is pressed - voucher variant only */
   onCtaPress?: (item: CarouselItem, index: number) => void;
 
   /** Fills parent container width via onLayout measurement */
@@ -94,22 +94,22 @@ const getSource = (
   };
 };
 
-// ─── Promo Pagination (animated pill dots) ───────────────────────────────────
+// Voucher pagination (animated pill dots)
 // Note: Animated.View does not support className — animated width/color stay in style
 
-type PromoPaginationProps = {
+type VoucherPaginationProps = {
   index: number;
   count: number;
   progress: SharedValue<number>;
   onPress: (index: number) => void;
 };
 
-const PromoPaginationDot = ({
+const VoucherPaginationDot = ({
   index,
   count,
   progress,
   onPress,
-}: PromoPaginationProps) => {
+}: VoucherPaginationProps) => {
   const animatedStyle = useAnimatedStyle(() => {
     const isActive = Math.round(progress.value) % count === index;
     return {
@@ -291,13 +291,13 @@ const PortraitSlide = ({
   );
 };
 
-// ─── Promo Slide ──────────────────────────────────────────────────────────────
+// Voucher slide
 
-const PROMO_CARD_WIDTH = 300;
-const PROMO_IMAGE_HEIGHT = 200;
-const PROMO_CARD_HEIGHT = 420;
+const VOUCHER_CARD_WIDTH = 300;
+const VOUCHER_IMAGE_HEIGHT = 200;
+const VOUCHER_CARD_HEIGHT = 420;
 
-type PromoSlideProps = {
+type VoucherSlideProps = {
   item: CarouselItem;
   index: number;
   width?: number;
@@ -305,13 +305,13 @@ type PromoSlideProps = {
   onCtaPress?: (item: CarouselItem, index: number) => void;
 };
 
-const PromoSlide = ({
+const VoucherSlide = ({
   item,
   index,
-  width = PROMO_CARD_WIDTH,
+  width = VOUCHER_CARD_WIDTH,
   onItemPress,
   onCtaPress,
-}: PromoSlideProps) => {
+}: VoucherSlideProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
@@ -321,19 +321,19 @@ const PromoSlide = ({
       className="bg-white overflow-hidden rounded-2xl"
       style={{
         width,
-        height: PROMO_CARD_HEIGHT,
+        height: VOUCHER_CARD_HEIGHT,
       }}
     >
       {/* ── Image section ── */}
       <View
         className="w-full overflow-hidden"
-        style={{ height: PROMO_IMAGE_HEIGHT }}
+        style={{ height: VOUCHER_IMAGE_HEIGHT }}
       >
         <Image
           source={getSource(item.image, width * 0.05)}
           style={{
             width: "100%",
-            height: PROMO_IMAGE_HEIGHT,
+            height: VOUCHER_IMAGE_HEIGHT,
           }}
           contentFit="cover"
           onLoadStart={() => setIsLoading(true)}
@@ -399,7 +399,7 @@ export default function AppCarousel({
   fullWidth = false,
 }: AppCarouselProps) {
   const isPortrait = variant === "portrait";
-  const isPromo = variant === "promo";
+  const isVoucher = variant === "voucher";
 
   // ── Dimensions ──────────────────────────────────────────────────────────────
   const PEEK_RATIO = 0.15;
@@ -409,9 +409,9 @@ export default function AppCarousel({
     ? slideWidth / resolvedAspectRatio
     : width / resolvedAspectRatio;
 
-  const carouselWidth = isPromo ? width : isPortrait ? slideWidth : width;
-  const containerHeight = isPromo ? PROMO_CARD_HEIGHT : slideHeight;
-  const containerWidth = isPromo
+  const carouselWidth = isVoucher ? width : isPortrait ? slideWidth : width;
+  const containerHeight = isVoucher ? VOUCHER_CARD_HEIGHT : slideHeight;
+  const containerWidth = isVoucher
     ? fullWidth
       ? ("100%" as any)
       : width
@@ -448,7 +448,7 @@ export default function AppCarousel({
           isPortrait
             ? { width, height: containerHeight, overflow: "visible" }
             : {
-                width: isPromo ? PROMO_CARD_WIDTH : width,
+                width: isVoucher ? VOUCHER_CARD_WIDTH : width,
                 height: containerHeight,
               }
         }
@@ -456,9 +456,9 @@ export default function AppCarousel({
           progress.value = absoluteProgress;
         }}
         renderItem={({ item, index }) => {
-          if (isPromo) {
+          if (isVoucher) {
             return (
-              <PromoSlide
+              <VoucherSlide
                 item={item}
                 index={index}
                 width={carouselWidth}
@@ -497,11 +497,11 @@ export default function AppCarousel({
         // marginTop is dynamic — keep in style
         <View
           className="flex-row items-center gap-1.5"
-          style={{ marginTop: isPromo ? 14 : isPortrait ? 12 : 10 }}
+          style={{ marginTop: isVoucher ? 14 : isPortrait ? 12 : 10 }}
         >
-          {isPromo
+          {isVoucher
             ? data.map((_, i) => (
-                <PromoPaginationDot
+                <VoucherPaginationDot
                   key={i}
                   index={i}
                   count={data.length}

@@ -1,4 +1,4 @@
-import { HeaderBigLogo } from "@/src/components/layout/header";
+﻿import { HeaderBigLogo } from "@/src/components/layout/header";
 import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { NormalInput } from "@/src/components/ui/Inputs";
 import { handleApiError } from "@/src/services/api/api";
@@ -18,30 +18,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type StoredUser = {
   tag_uid: string;
-  name?: string;
-  email?: string;
-  phone_number?: string;
 };
 
 function toIsoDate(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+function toNumber(value: number | string | null | undefined, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 export default function BookAppointment() {
-  const params = useLocalSearchParams<{ branchId?: string; branchTitle?: string }>();
+  const params = useLocalSearchParams<{
+    branchId?: string;
+    branchTitle?: string;
+  }>();
   const queryClient = useQueryClient();
 
   const branchId = Number(params.branchId || 0);
   const branchTitle = params.branchTitle || "Selected Branch";
 
   const [tagUid, setTagUid] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [partySize, setPartySize] = useState("");
   const [slotDate, setSlotDate] = useState(toIsoDate());
   const [note, setNote] = useState("");
-  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(
+    null,
+  );
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -52,9 +55,6 @@ export default function BookAppointment() {
       try {
         const user = JSON.parse(raw) as StoredUser;
         setTagUid(user.tag_uid || "");
-        setName(user.name || "");
-        setEmail(user.email || "");
-        setPhone(user.phone_number || "");
       } catch (error) {
         console.error("Failed to parse stored userData", error);
       }
@@ -77,8 +77,7 @@ export default function BookAppointment() {
   useEffect(() => {
     if (!packages.length || selectedPackageId) return;
     const first = packages[0];
-    setSelectedPackageId(first.id);
-    setPartySize(String(first.min_pax || 1));
+    setSelectedPackageId(toNumber(first.package_id));
   }, [packages, selectedPackageId]);
 
   const { data: slotResponse, isLoading: isLoadingSlots } = useQuery({
@@ -91,11 +90,6 @@ export default function BookAppointment() {
     const data = slotResponse?.data;
     return Array.isArray(data) ? data : [];
   }, [slotResponse]);
-
-  const selectedPackage = useMemo(
-    () => packages.find((item) => item.id === selectedPackageId) || null,
-    [packages, selectedPackageId],
-  );
 
   const createBookingMutation = useMutation({
     mutationFn: createBooking,
@@ -117,8 +111,6 @@ export default function BookAppointment() {
   });
 
   const handleSubmit = () => {
-    const pax = Number(partySize || 0);
-
     if (!tagUid) {
       Alert.alert("Missing User", "Please login again before booking.");
       return;
@@ -134,43 +126,16 @@ export default function BookAppointment() {
       return;
     }
 
-    if (!name.trim() || !phone.trim()) {
-      Alert.alert("Contact Required", "Please provide your name and phone.");
-      return;
-    }
-
-    if (pax <= 0) {
-      Alert.alert("Invalid Party Size", "Please enter a valid party size.");
-      return;
-    }
-
-    if (selectedPackage && (pax < selectedPackage.min_pax || pax > selectedPackage.max_pax)) {
-      Alert.alert(
-        "Party Size Out of Range",
-        `This package accepts ${selectedPackage.min_pax}-${selectedPackage.max_pax} guests.`,
-      );
-      return;
-    }
-
     createBookingMutation.mutate({
       tag_uid: tagUid,
-      branch_id: branchId,
       slot_id: selectedSlotId,
       package_id: selectedPackageId,
-      user_name: name,
-      user_email: email,
-      user_phone: phone,
-      party_size: pax,
       note,
-      promo_id: null,
     });
   };
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-black"
-      edges={["top", "left", "right"]}
-    >
+    <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
         <HeaderBigLogo hasBackButton={true} hasNotifications={false} />
         <View className="w-full h-auto items-center justify-center mt-10 px-6">
@@ -182,37 +147,50 @@ export default function BookAppointment() {
           </Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 36 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 36 }}
+        >
           <Text className="text-darkBlue font-kanitBold text-lg mt-4 mb-2">
             1) Choose Package
           </Text>
 
           {isLoadingPackages ? (
-            <Text className="text-gray-600 font-kanit">Loading packages...</Text>
+            <Text className="text-gray-600 font-kanit">
+              Loading packages...
+            </Text>
           ) : packages.length === 0 ? (
-            <Text className="text-gray-600 font-kanit">No packages available for this branch.</Text>
+            <Text className="text-gray-600 font-kanit">
+              No packages available for this branch.
+            </Text>
           ) : (
-            packages.map((item) => {
-              const isSelected = item.id === selectedPackageId;
+            packages.map((item, index) => {
+              const packageId = toNumber(item.package_id);
+              const packagePaxSize = toNumber(item.pax_size, 1);
+              const isSelected = packageId === selectedPackageId;
+              const packagePrice = toNumber(item.price);
+              const packageKey = `${item.package_id ?? "pkg"}-${item.package_name ?? "unnamed"}-${index}`;
 
               return (
                 <Pressable
-                  key={item.id}
+                  key={packageKey}
                   onPress={() => {
-                    setSelectedPackageId(item.id);
-                    setPartySize(String(item.min_pax || 1));
+                    setSelectedPackageId(packageId);
                   }}
                   className={`rounded-xl border p-3 mb-3 ${isSelected ? "border-darkBlue bg-blue-50" : "border-gray-200 bg-white"}`}
                 >
-                  <Text className="font-kanitBold text-darkBlue text-base">{item.name}</Text>
+                  <Text className="font-kanitBold text-darkBlue text-base">
+                    {item.package_name}
+                  </Text>
                   <Text className="font-kanit text-gray-700 mt-1">
-                    PHP {item.price_per_head.toFixed(2)} per head
+                    PHP {packagePrice.toFixed(2)} per head
                   </Text>
                   <Text className="font-kanit text-gray-700">
-                    Pax range: {item.min_pax} - {item.max_pax}
+                    Good for {packagePaxSize} pax
                   </Text>
-                  {!!item.best_for && (
-                    <Text className="font-kanit text-gray-600 mt-1">Best for: {item.best_for}</Text>
+                  {!!item.details && (
+                    <Text className="font-kanit text-gray-600 mt-1">
+                      {item.details}
+                    </Text>
                   )}
                 </Pressable>
               );
@@ -233,15 +211,19 @@ export default function BookAppointment() {
             {isLoadingSlots ? (
               <Text className="text-gray-600 font-kanit">Loading slots...</Text>
             ) : slots.length === 0 ? (
-              <Text className="text-gray-600 font-kanit">No available slots on selected date.</Text>
+              <Text className="text-gray-600 font-kanit">
+                No available slots on selected date.
+              </Text>
             ) : (
               <View className="flex-row flex-wrap gap-2">
-                {slots.map((slot) => {
+                {slots.map((slot, index) => {
+                  console.log("Slot details:", slot);
                   const isSelected = selectedSlotId === slot.id;
                   const disabled = !slot.is_available;
+                  const slotKey = `${slot.id ?? "slot"}-${slot.time_start}-${slot.time_end}-${index}`;
                   return (
                     <Pressable
-                      key={slot.id}
+                      key={slotKey}
                       onPress={() => !disabled && setSelectedSlotId(slot.id)}
                       disabled={disabled}
                       className={`px-3 py-2 rounded-lg border ${isSelected ? "border-darkBlue bg-blue-100" : "border-gray-200 bg-white"}`}
@@ -249,9 +231,6 @@ export default function BookAppointment() {
                     >
                       <Text className="font-kanitBold text-darkBlue text-sm">
                         {slot.time_start} - {slot.time_end}
-                      </Text>
-                      <Text className="font-kanit text-xs text-gray-600">
-                        Seats left: {slot.available_seats}
                       </Text>
                     </Pressable>
                   );
@@ -261,30 +240,8 @@ export default function BookAppointment() {
           </View>
 
           <Text className="text-darkBlue font-kanitBold text-lg mt-6 mb-2">
-            3) Booking Details
+            3) Note
           </Text>
-
-          <NormalInput inputName="Name" value={name} onChangeText={setName} inputWidth="100%" />
-          <View className="h-3" />
-          <NormalInput inputName="Email" value={email} onChangeText={setEmail} inputWidth="100%" />
-          <View className="h-3" />
-          <NormalInput
-            inputName="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            inputWidth="100%"
-            isNumeric={true}
-            maxLength={11}
-          />
-          <View className="h-3" />
-          <NormalInput
-            inputName="Party Size"
-            value={partySize}
-            onChangeText={setPartySize}
-            inputWidth="100%"
-            isNumeric={true}
-          />
-          <View className="h-3" />
           <NormalInput
             inputName="Special Requests"
             value={note}
@@ -294,7 +251,11 @@ export default function BookAppointment() {
 
           <View className="mt-6">
             <SmallPrimaryButton
-              buttonName={createBookingMutation.isPending ? "Submitting..." : "Save Booking"}
+              buttonName={
+                createBookingMutation.isPending
+                  ? "Submitting..."
+                  : "Save Booking"
+              }
               onPress={handleSubmit}
               isDisabled={createBookingMutation.isPending || branchId <= 0}
             />

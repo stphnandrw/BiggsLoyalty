@@ -4,116 +4,25 @@ namespace App\Controllers;
 
 class BookingController extends BaseController
 {
-	private function getDefaultPackages(): array
-	{
-		return [
-			[
-				'id' => 1,
-				'name' => 'Basic Package (Snack/Seminar)',
-				'price_per_head' => 350,
-				'min_pax' => 20,
-				'max_pax' => 30,
-				'inclusions' => [
-					'3-hour hall use',
-					'Sound system',
-					'Plated snack',
-					'Bottomless Iced Tea',
-				],
-				'best_for' => 'Small Meetings or Workshops',
-			],
-			[
-				'id' => 2,
-				'name' => 'Classic Buffet',
-				'price_per_head' => 550,
-				'min_pax' => 30,
-				'max_pax' => 50,
-				'inclusions' => [
-					'4-hour hall use',
-					'Standard Buffet',
-					'Basic Venue Decor',
-					'Projector Use',
-				],
-				'best_for' => 'Birthdays and Family Reunions',
-			],
-			[
-				'id' => 3,
-				'name' => 'Grand Celebration',
-				'price_per_head' => 750,
-				'min_pax' => 50,
-				'max_pax' => 100,
-				'inclusions' => [
-					'5-hour hall use',
-					'Premium Buffet',
-					'Special Setup',
-					'Dedicated Coordinator',
-				],
-				'best_for' => 'Corporate Events, Weddings, and Debuts',
-			],
-		];
-	}
-
-	private function parseInclusions($raw): array
-	{
-		if (is_array($raw)) {
-			return $raw;
-		}
-
-		if (!is_string($raw) || $raw === '') {
-			return [];
-		}
-
-		$decoded = json_decode($raw, true);
-		if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-			return $decoded;
-		}
-
-		return array_values(array_filter(array_map('trim', explode('|', $raw))));
-	}
-
 	public function getBranchPackages()
 	{
 		$data = $this->request->getJSON();
-		$branchId = (int) ($data->branch_id ?? 0);
-
-		if ($branchId <= 0) {
-			return $this->response->setStatusCode(400)->setJSON(['message' => 'branch_id is required']);
+		
+		$branchId = $data->branch_id;
+		
+		if (!$branchId) {
+			return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid branch_id']);
 		}
 
 		if (!$this->branchModel->find($branchId)) {
 			return $this->response->setStatusCode(404)->setJSON(['message' => 'Branch not found']);
 		}
-
-		if (!$this->packageModel->tableExists('packages')) {
-			return $this->response->setJSON([
-				'status' => 'success',
-				'data' => $this->getDefaultPackages(),
-			]);
-		}
-
-		$packages = $this->packageModel->getAllPackages();
-
-		$normalized = array_map(function ($package) {
-			$rawDetails = (string) ($package['details'] ?? '');
-			$detailsLines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $rawDetails) ?: [])));
-			$inclusions = $detailsLines;
-			if (empty($inclusions) && $rawDetails !== '') {
-				$inclusions = [$rawDetails];
-			}
-
-			return [
-				'id' => (int) ($package['package_id'] ?? 0),
-				'name' => $package['package_name'] ?? '',
-				'price_per_head' => (float) ($package['price'] ?? 0),
-				'min_pax' => 1,
-				'max_pax' => 9999,
-				'inclusions' => $inclusions,
-				'best_for' => '',
-			];
-		}, $packages);
+		
+		$packages = $this->packageModel->getPackagesByBranchId($branchId);
 
 		return $this->response->setJSON([
 			'status' => 'success',
-			'data' => $normalized,
+			'data' => $packages,
 		]);
 	}
 
@@ -142,29 +51,20 @@ class BookingController extends BaseController
 		]);
 	}
 
+
 	public function createBooking()
 	{
 		$data = $this->request->getJSON();
 
 		$tagUid = trim((string) ($data->tag_uid ?? ''));
-		$branchId = (int) ($data->branch_id ?? 0);
 		$slotId = (int) ($data->slot_id ?? 0);
 		$packageId = (int) ($data->package_id ?? 0);
-		$userName = trim((string) ($data->user_name ?? ''));
-		$userEmail = trim((string) ($data->user_email ?? ''));
-		$userPhone = trim((string) ($data->user_phone ?? ''));
 		$note = trim((string) ($data->note ?? ''));
-		$promoId = $data->promo_id ?? null;
-		$partySize = (int) ($data->party_size ?? 0);
 
-		if ($tagUid === '' || $branchId <= 0 || $slotId <= 0 || $partySize <= 0) {
+		if ($tagUid === '' || $slotId <= 0 || $packageId <= 0) {
 			return $this->response->setStatusCode(400)->setJSON([
-				'message' => 'tag_uid, branch_id, slot_id, and party_size are required',
+				'message' => 'tag_uid, slot_id, and package_id are required',
 			]);
-		}
-
-		if (!$this->branchModel->find($branchId)) {
-			return $this->response->setStatusCode(404)->setJSON(['message' => 'Branch not found']);
 		}
 
 		$slot = $this->bookingSlotModel->getSlotWithAvailability($slotId);
@@ -172,40 +72,37 @@ class BookingController extends BaseController
 			return $this->response->setStatusCode(404)->setJSON(['message' => 'Slot not found']);
 		}
 
-		if ((int) $slot['branch_id'] !== $branchId) {
+		$package = $this->packageModel->getPackageById($packageId);
+		if (!$package) {
+			return $this->response->setStatusCode(404)->setJSON(['message' => 'Package not found']);
+		}
+
+		if ((int) ($package['branch_id'] ?? 0) !== (int) ($slot['branch_id'] ?? 0)) {
 			return $this->response->setStatusCode(400)->setJSON([
-				'message' => 'Selected slot does not belong to the selected branch',
+				'message' => 'Selected package does not belong to the selected slot branch',
 			]);
 		}
 
-		if ((int) ($slot['is_active'] ?? 0) !== 1) {
-			return $this->response->setStatusCode(400)->setJSON(['message' => 'Selected slot is inactive']);
+		if ((int) ($slot['is_available'] ?? 0) !== 1) {
+			return $this->response->setStatusCode(400)->setJSON(['message' => 'Selected slot is not available']);
 		}
 
-		if ($partySize > (int) ($slot['available_seats'] ?? 0)) {
-			return $this->response->setStatusCode(400)->setJSON([
-				'message' => 'Selected slot has insufficient available seats',
-			]);
+		$checkDuplicate = $this->bookingModel->checkBookingExists($tagUid, $slotId);
+
+		if ($checkDuplicate) {
+			return $this->response->setStatusCode(409)->setJSON(['message' => 'You have already booked this slot']);
 		}
 
 		$payload = [
 			'tag_uid' => $tagUid,
 			'slot_id' => $slotId,
-			'branch_id' => $branchId,
-			'package_id' => $packageId > 0 ? $packageId : null,
-			'user_name' => $userName,
-			'user_email' => $userEmail,
-			'user_phone' => $userPhone,
-			'party_size' => $partySize,
+			'package_id' => $packageId,
 			'note' => $note,
-			'promo_id' => $promoId,
 			'status' => 'pending',
-			'slot_date' => $slot['slot_date'] ?? null,
-			'time_start' => $slot['time_start'] ?? null,
-			'time_end' => $slot['time_end'] ?? null,
 		];
 
 		$bookingId = $this->bookingModel->createBooking($payload);
+
 		if (!$bookingId) {
 			return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to create booking']);
 		}
@@ -231,6 +128,60 @@ class BookingController extends BaseController
 		return $this->response->setJSON([
 			'status' => 'success',
 			'data' => $bookings,
+		]);
+	}
+
+	public function getBookingCountByTagUid()
+	{
+		$data = $this->request->getJSON();
+		$tagUid = trim((string) ($data->tag_uid ?? ''));
+
+		if ($tagUid === '') {
+			return $this->response->setStatusCode(400)->setJSON(['message' => 'tag_uid is required']);
+		}
+
+		$count = $this->bookingModel->countBookingsByTagUid($tagUid);
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'data' => [
+				'booking_count' => $count,
+			],
+		]);
+	}
+
+	public function cancelBooking()
+	{
+		$data = $this->request->getJSON();
+		$bookingId = (int) ($data->booking_id ?? 0);
+		$tagUid = trim((string) ($data->tag_uid ?? ''));
+
+		if ($bookingId <= 0 || $tagUid === '') {
+			return $this->response->setStatusCode(400)->setJSON(['message' => 'booking_id and tag_uid are required']);
+		}
+
+		$booking = $this->bookingModel->find($bookingId);
+		if (!$booking) {
+			return $this->response->setStatusCode(404)->setJSON(['message' => 'Booking not found']);
+		}
+
+		if ($booking['tag_uid'] !== $tagUid) {
+			return $this->response->setStatusCode(403)->setJSON(['message' => 'You are not authorized to cancel this booking']);
+		}
+
+		if ((int) ($booking['status'] ?? 0) === 2) {
+			return $this->response->setStatusCode(400)->setJSON(['message' => 'Booking is already cancelled']);
+		}
+
+		$cancelled = $this->bookingModel->update($bookingId, ['status' => 'cancelled']);
+
+		if (!$cancelled) {
+			return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to cancel booking']);
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Booking cancelled successfully',
 		]);
 	}
 }

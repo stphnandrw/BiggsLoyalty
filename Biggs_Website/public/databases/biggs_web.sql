@@ -1,4 +1,4 @@
--- phpMyAdmin SQL Dump
+﻿-- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
@@ -87,7 +87,7 @@ CREATE TABLE `bookings` (
   `user_phone` varchar(30) DEFAULT NULL,
   `party_size` int(11) NOT NULL DEFAULT 1,
   `note` text DEFAULT NULL,
-  `promo_id` int(11) DEFAULT NULL,
+  `voucher_id` int(11) DEFAULT NULL,
   `status` enum('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -171,7 +171,7 @@ INSERT INTO `btc_profile` (`tag_uid`, `phone_number`, `email`, `name`, `birthday
 CREATE TABLE `favorites` (
   `favorite_id` int(11) NOT NULL,
   `tag_uid` varchar(32) NOT NULL,
-  `promo_id` int(11) DEFAULT NULL,
+  `voucher_id` int(11) DEFAULT NULL,
   `menu_id` int(11) DEFAULT NULL,
   `date_redeemed` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -180,7 +180,7 @@ CREATE TABLE `favorites` (
 -- Dumping data for table `favorites`
 --
 
-INSERT INTO `favorites` (`favorite_id`, `tag_uid`, `promo_id`, `menu_id`, `date_redeemed`) VALUES
+INSERT INTO `favorites` (`favorite_id`, `tag_uid`, `voucher_id`, `menu_id`, `date_redeemed`) VALUES
 (26, '04A6AD40C22A81', 9, NULL, NULL),
 (29, '04A6AD40C22A81', 12, NULL, NULL),
 (33, '04A6AD40C22A81', 4, NULL, NULL),
@@ -312,12 +312,12 @@ INSERT INTO `otp` (`otp_id`, `tag_uid`, `phone_number`, `otp_code`, `expires_at`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `promos`
+-- Table structure for table `vouchers`
 --
 
-CREATE TABLE `promos` (
-  `promo_id` int(11) NOT NULL,
-  `promo_name` varchar(255) NOT NULL,
+CREATE TABLE `vouchers` (
+  `voucher_id` int(11) NOT NULL,
+  `voucher_name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `required_points` int(11) NOT NULL,
   `start_date` datetime DEFAULT NULL,
@@ -327,10 +327,10 @@ CREATE TABLE `promos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `promos`
+-- Dumping data for table `vouchers`
 --
 
-INSERT INTO `promos` (`promo_id`, `promo_name`, `description`, `required_points`, `start_date`, `end_date`, `image_url`, `created_at`) VALUES
+INSERT INTO `vouchers` (`voucher_id`, `voucher_name`, `description`, `required_points`, `start_date`, `end_date`, `image_url`, `created_at`) VALUES
 (1, '2pc Chicken w/ Rice Discount', 'Enjoy 2pc chicken with rice at a discounted price', 120, '2026-03-27 14:37:23', '2026-04-16 14:37:23', 'chicken_discount.png', '2026-03-27 14:37:23'),
 (2, 'Family Chicken Bundle', 'Perfect for sharing! 6pc chicken bundle', 300, '2026-03-27 14:37:23', '2026-04-26 14:37:23', 'family_bundle.png', '2026-03-27 14:37:23'),
 (3, 'Breakfast Silog Meal', 'Start your day with a delicious silog meal', 80, '2026-03-27 14:37:23', '2026-04-11 14:37:23', 'silog.png', '2026-03-27 14:37:23'),
@@ -381,7 +381,7 @@ ALTER TABLE `bookings`
   ADD KEY `idx_bookings_slot` (`slot_id`),
   ADD KEY `idx_bookings_branch` (`branch_id`),
   ADD KEY `idx_bookings_status` (`status`),
-  ADD KEY `idx_bookings_promo` (`promo_id`);
+  ADD KEY `idx_bookings_voucher` (`voucher_id`);
 
 --
 -- Indexes for table `booking_slots`
@@ -410,7 +410,7 @@ ALTER TABLE `btc_profile`
 --
 ALTER TABLE `favorites`
   ADD PRIMARY KEY (`favorite_id`),
-  ADD KEY `promo_id` (`promo_id`),
+  ADD KEY `voucher_id` (`voucher_id`),
   ADD KEY `idx_favorites_tag_uid` (`tag_uid`);
 
 --
@@ -427,11 +427,11 @@ ALTER TABLE `otp`
   ADD KEY `idx_otp_tag_uid` (`tag_uid`);
 
 --
--- Indexes for table `promos`
+-- Indexes for table `vouchers`
 --
-ALTER TABLE `promos`
-  ADD PRIMARY KEY (`promo_id`),
-  ADD KEY `idx_promos_promo_id` (`promo_id`);
+ALTER TABLE `vouchers`
+  ADD PRIMARY KEY (`voucher_id`),
+  ADD KEY `idx_vouchers_voucher_id` (`voucher_id`);
 
 --
 -- Indexes for table `user_tokens`
@@ -481,10 +481,10 @@ ALTER TABLE `otp`
   MODIFY `otp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `promos`
+-- AUTO_INCREMENT for table `vouchers`
 --
-ALTER TABLE `promos`
-  MODIFY `promo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+ALTER TABLE `vouchers`
+  MODIFY `voucher_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `user_tokens`
@@ -501,7 +501,7 @@ ALTER TABLE `user_tokens`
 --
 ALTER TABLE `bookings`
   ADD CONSTRAINT `fk_bookings_branch` FOREIGN KEY (`branch_id`) REFERENCES `biggs_branches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_bookings_promo` FOREIGN KEY (`promo_id`) REFERENCES `promos` (`promo_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_bookings_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`voucher_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_bookings_slot` FOREIGN KEY (`slot_id`) REFERENCES `booking_slots` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -521,7 +521,7 @@ ALTER TABLE `btc_loyalty`
 --
 ALTER TABLE `favorites`
   ADD CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`tag_uid`) REFERENCES `btc_profile` (`tag_uid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`promo_id`) REFERENCES `promos` (`promo_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `favorites_ibfk_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `vouchers` (`voucher_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `otp`
@@ -539,3 +539,6 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+

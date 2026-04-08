@@ -1,16 +1,16 @@
-import { getItem, setItem } from "@/src/utils/asyncStorage";
+﻿import { getItem, setItem } from "@/src/utils/asyncStorage";
 import * as Notifications from "expo-notifications";
 
 const LAST_LOGIN_KEY = "last_login_timestamp";
 
-// ─── Last-login persistence ───────────────────────────────────────────────────
+// Last-login persistence
 
 /** Call this right after a successful login. */
 export async function saveLastLogin() {
   const now = Date.now().toString();
   await setItem(LAST_LOGIN_KEY, now);
   console.log(
-    "[Notifications] saveLastLogin → saved timestamp:",
+    "[Notifications] saveLastLogin -> saved timestamp:",
     now,
     `(${new Date(parseInt(now)).toLocaleString()})`,
   );
@@ -28,14 +28,14 @@ export async function checkInactivityAndNotify(
   thresholdSeconds = 7 * 24 * 60 * 60,
 ) {
   console.log(
-    "[Notifications] checkInactivityAndNotify → reading AsyncStorage...",
+    "[Notifications] checkInactivityAndNotify -> reading AsyncStorage...",
   );
 
   const raw = await getItem(LAST_LOGIN_KEY);
 
   if (!raw) {
     console.log(
-      "[Notifications] checkInactivityAndNotify → no last_login found (first-time or never logged in), skipping.",
+      "[Notifications] checkInactivityAndNotify -> no last_login found (first-time or never logged in), skipping.",
     );
     return;
   }
@@ -45,11 +45,11 @@ export async function checkInactivityAndNotify(
   const remaining = thresholdSeconds - secondsSince;
 
   console.log(
-    `[Notifications] checkInactivityAndNotify →`,
+    `[Notifications] checkInactivityAndNotify ->`,
     `\n  last_login : ${new Date(lastLogin).toLocaleString()}`,
     `\n  seconds since: ${secondsSince.toFixed(1)}s`,
     `\n  threshold  : ${thresholdSeconds}s`,
-    `\n  status     : ${remaining > 0 ? `⏳ ${remaining.toFixed(1)}s remaining` : "🔔 THRESHOLD REACHED — firing notification"}`,
+    `\n  status     : ${remaining > 0 ? `${remaining.toFixed(1)}s remaining` : "THRESHOLD REACHED - firing notification"}`,
   );
 
   if (secondsSince >= thresholdSeconds) {
@@ -57,13 +57,13 @@ export async function checkInactivityAndNotify(
     const resetTime = Date.now().toString();
     await setItem(LAST_LOGIN_KEY, resetTime);
     console.log(
-      "[Notifications] checkInactivityAndNotify → notification fired, timestamp reset to:",
+      "[Notifications] checkInactivityAndNotify -> notification fired, timestamp reset to:",
       new Date(parseInt(resetTime)).toLocaleString(),
     );
   }
 }
 
-// ─── Category & Action Identifiers ───────────────────────────────────────────
+// Category & action identifiers
 
 export const NOTIFICATION_CATEGORIES = {
   WE_MISS_YOU: "we-miss-you",
@@ -82,13 +82,13 @@ export const NOTIFICATION_ACTIONS = {
   REMIND_LATER: "REMIND_LATER",
 } as const;
 
-// ─── Register Interactive Categories ─────────────────────────────────────────
+// Register interactive categories
 // Call this once at app startup. Categories define the action buttons that
 // appear below the notification banner (iOS) or as notification reply actions
 // (Android 7+).
 
 export async function registerNotificationCategories() {
-  // "We miss you" — re-engagement, navigates to Promos
+  // "We miss you" re-engagement, navigates to Vouchers.
   await Notifications.setNotificationCategoryAsync(
     NOTIFICATION_CATEGORIES.WE_MISS_YOU,
     [
@@ -105,7 +105,7 @@ export async function registerNotificationCategories() {
     ],
   );
 
-  // "New exclusive offers" — promo push, navigates to Promos
+  // "New exclusive offers" voucher push, navigates to Vouchers.
   await Notifications.setNotificationCategoryAsync(
     NOTIFICATION_CATEGORIES.NEW_OFFERS,
     [
@@ -122,7 +122,7 @@ export async function registerNotificationCategories() {
     ],
   );
 
-  // "Inactive user" — nudge to log back in
+  // "Inactive user" nudge to log back in
   await Notifications.setNotificationCategoryAsync(
     NOTIFICATION_CATEGORIES.INACTIVE_USER,
     [
@@ -140,7 +140,7 @@ export async function registerNotificationCategories() {
   );
 }
 
-// ─── Notification Payloads ────────────────────────────────────────────────────
+// Notification payloads
 
 type NotificationPayload = {
   title: string;
@@ -155,26 +155,26 @@ const NOTIFICATION_PAYLOADS: Record<
   NotificationPayload
 > = {
   WE_MISS_YOU: {
-    title: "Hey, we miss you! 💛",
+    title: "Hey, we miss you!",
     body: "Check out our new offers waiting just for you.",
-    screen: "/(tabs)/promos",
+    screen: "/(tabs)/vouchers",
     categoryIdentifier: NOTIFICATION_CATEGORIES.WE_MISS_YOU,
   },
   NEW_OFFERS: {
-    title: "Exclusive offers just for you! 🎉",
-    body: "Hey there! New exclusive deals have just dropped — don't miss out.",
-    screen: "/(tabs)/promos",
+    title: "Exclusive offers just for you!",
+    body: "Hey there! New exclusive deals have just dropped - don't miss out.",
+    screen: "/(tabs)/vouchers",
     categoryIdentifier: NOTIFICATION_CATEGORIES.NEW_OFFERS,
   },
   INACTIVE_USER: {
-    title: "Hey there! 👋",
+    title: "Hey there!",
     body: "You haven't logged in for a while. Come back and see what's new!",
     screen: "/(auth)/login",
     categoryIdentifier: NOTIFICATION_CATEGORIES.INACTIVE_USER,
   },
 };
 
-// ─── Local / On-Device Notifications (for testing) ───────────────────────────
+// Local / on-device notifications (for testing)
 // These fire instantly on the device without going through a server.
 // Perfect for development or for scheduling reminder-style nudges.
 
@@ -204,7 +204,7 @@ export async function scheduleLocalNotification(
   });
 }
 
-// ─── Remote Push via Expo Push API ───────────────────────────────────────────
+// Remote push via Expo Push API
 // In production you'd call this from your backend server (Node, Python, etc.)
 // so that YOU control when each user receives a notification.
 // For demo purposes this function can be called from the app using the

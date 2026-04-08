@@ -1,9 +1,14 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
-import { BookingRecord, getMyBookings } from "@/src/services/api/bookings";
+import { MiniGhostButton } from "@/src/components/ui/Buttons";
+import {
+  BookingRecord,
+  cancelBooking,
+  getMyBookings,
+} from "@/src/services/api/bookings";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type StoredUser = {
@@ -46,16 +51,33 @@ export default function ScheduledEvents() {
     enabled: !!tagUid,
   });
 
+  const handleCancelSchedule = useCallback(
+    async (bookingId: number, tagUid: string) => {
+      try {
+        console.log(
+          "Attempting to cancel booking with ID:",
+          bookingId,
+          "for tag UID:",
+          tagUid,
+        );
+        await cancelBooking(bookingId, tagUid);
+        await refetch();
+        Alert.alert("Success", "Booking cancelled successfully.");
+      } catch (error) {
+        console.error("Failed to cancel booking", error);
+        Alert.alert("Error", "Failed to cancel the booking. Please try again.");
+      }
+    },
+    [refetch],
+  );
+
   const bookings: BookingRecord[] = useMemo(() => {
     const data = bookingsResponse?.data;
     return Array.isArray(data) ? data : [];
   }, [bookingsResponse]);
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-black"
-      edges={["top", "left", "right"]}
-    >
+    <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
         <HeaderBigLogo hasBackButton={true} hasNotifications={false} />
         <View className="w-full h-auto items-center justify-center mt-16">
@@ -72,9 +94,13 @@ export default function ScheduledEvents() {
           }
         >
           {isLoading ? (
-            <Text className="text-gray-600 font-kanit">Loading your events...</Text>
+            <Text className="text-gray-600 font-kanit">
+              Loading your events...
+            </Text>
           ) : bookings.length === 0 ? (
-            <Text className="text-gray-600 font-kanit">No scheduled events yet.</Text>
+            <Text className="text-gray-600 font-kanit">
+              No scheduled events yet.
+            </Text>
           ) : (
             bookings.map((booking) => (
               <View
@@ -104,18 +130,24 @@ export default function ScheduledEvents() {
                 )}
 
                 <Text className="font-kanit text-gray-700">
-                  Schedule: {booking.slot_date || "-"} {booking.time_start || ""}
+                  Schedule: {booking.slot_date || "-"}{" "}
+                  {booking.time_start || ""}
                   {booking.time_end ? ` - ${booking.time_end}` : ""}
-                </Text>
-
-                <Text className="font-kanit text-gray-700">
-                  Party Size: {booking.party_size || 0}
                 </Text>
 
                 {!!booking.created_at && (
                   <Text className="font-kanit text-gray-500 text-xs mt-1">
                     Requested: {booking.created_at}
                   </Text>
+                )}
+
+                {booking.status !== "cancelled" && (
+                  <View>
+                    <MiniGhostButton
+                      buttonName="Cancel Booking"
+                      onPress={() => handleCancelSchedule(booking.id, tagUid)}
+                    />
+                  </View>
                 )}
               </View>
             ))

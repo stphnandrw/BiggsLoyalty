@@ -1,4 +1,4 @@
-import { FontAwesome6 } from "@expo/vector-icons";
+﻿import { FontAwesome6 } from "@expo/vector-icons";
 import { Animated, Dimensions, Text, TouchableOpacity, View } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -10,14 +10,14 @@ export type Tab = {
   icon?: string | null;
 };
 
-type PromoTabBarProps = {
+type VoucherTabBarProps = {
   tabs: Tab[];
   activeTab: number;
   onTabPress: (index: number) => void;
   pillAnim: Animated.Value;
 };
 
-export function PromoTabBar({ tabs, activeTab, onTabPress, pillAnim }: PromoTabBarProps) {
+export function VoucherTabBar({ tabs, activeTab, onTabPress, pillAnim }: VoucherTabBarProps) {
   return (
     <View className="w-[90%] self-center mb-4">
       <View className="flex-row rounded-xl border border-gray-200 overflow-hidden relative h-11">

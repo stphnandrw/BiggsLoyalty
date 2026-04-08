@@ -1,8 +1,11 @@
-import { HeaderBigLogo } from "@/src/components/layout/header";
+﻿import { HeaderBigLogo } from "@/src/components/layout/header";
 import { PrimaryButton } from "@/src/components/ui/Buttons";
 import AppCarousel from "@/src/components/ui/Carousel";
 import { HorizontalLine } from "@/src/components/ui/Lines";
-import { AuthRequiredBottomSheet, PromoModal } from "@/src/components/ui/Modal";
+import {
+    AuthRequiredBottomSheet,
+    VoucherModal,
+} from "@/src/components/ui/Modal";
 import { HeadingText } from "@/src/components/ui/Texts";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { Image } from "expo-image";
@@ -18,10 +21,10 @@ const CAROUSEL_HEIGHT = screenWidth * (4 / 6); // 16:9 aspect ratio
 export default function Home() {
   const { isLoggedIn } = useAuthStatus();
   const [showAuthSheet, setShowAuthSheet] = useState(false);
-  const [showPromo, setShowPromo] = useState(true); // add this
+  const [showVoucher, setShowVoucher] = useState(true);
 
-  const handlePromoItemPress = (item: any) => {
-    console.log("Promo item pressed!", item);
+  const handleVoucherItemPress = (item: any) => {
+    console.log("Voucher item pressed!", item);
     // navigate or open details here
   };
 
@@ -49,14 +52,14 @@ export default function Home() {
       image: require("../../../assets/events/Biggs_Emerald_Grand_Opening.png"),
       title: "BIGGS Emerald Grand Opening",
       description:
-        "The coolest BIGGS store has finally opened its doors, promising not only exceptional food but an experience that transcends the ordinary. Stepping inside, you're greeted by its unique and cool interior design that exudes style and sophistication. Whether you're catching up with friends or enjoying a solo dining excursion, this coolest BIGGS store offers more than just a meal — it offers an unforgettable experience that will leave you craving more.",
+        "The coolest BIGGS store has finally opened its doors, promising not only exceptional food but an experience that transcends the ordinary. Stepping inside, you're greeted by its unique and cool interior design that exudes style and sophistication. Whether you're catching up with friends or enjoying a solo dining excursion, this coolest BIGGS store offers more than just a meal - it offers an unforgettable experience that will leave you craving more.",
     },
     {
       id: 4,
       image: require("../../../assets/events/Go_Bigg_Wellness_Run.png"),
       title: "Go BIGG Wellness Run",
       description:
-        "The first-ever Go Bigg Wellness Run was an epic journey that merged delightful experiences with a commitment to health, brought to you by BIGGS. Participants laced up their sneakers and joined fellow enthusiasts for a revitalizing adventure and delighting experience. Whether they were seasoned athletes or novice explorers, the Go Bigg Wellness Run offered something for everyone — a chance to sweat, smile, and savor the joy of movement.",
+        "The first-ever Go Bigg Wellness Run was an epic journey that merged delightful experiences with a commitment to health, brought to you by BIGGS. Participants laced up their sneakers and joined fellow enthusiasts for a revitalizing adventure and delighting experience. Whether they were seasoned athletes or novice explorers, the Go Bigg Wellness Run offered something for everyone - a chance to sweat, smile, and savor the joy of movement.",
     },
     {
       id: 5,
@@ -70,7 +73,7 @@ export default function Home() {
       image: require("../../../assets/events/Biggs_Made_It_Media_Lunch.jpg"),
       title: "BIGGS Made It Media Launch",
       description:
-        "Celebrate in true BIGGS style with the debut collection of BIGGS Made It merchandise! From trendy tees to versatile tote bags, stylish hats, cozy socks, and sleek flasks, there’s something for everyone to make any day a BIG day. The collection was unveiled in a memorable and exciting media launch on November 29, 2024—marking another milestone in BIGGS’ journey of bringing delight beyond the plate.",
+        "Celebrate in true BIGGS style with the debut collection of BIGGS Made It merchandise! From trendy tees to versatile tote bags, stylish hats, cozy socks, and sleek flasks, there's something for everyone to make any day a BIG day. The collection was unveiled in a memorable and exciting media launch on November 29, 2024 - marking another milestone in BIGGS' journey of bringing delight beyond the plate.",
     },
     {
       id: 7,
@@ -168,7 +171,7 @@ export default function Home() {
 
           <HorizontalLine />
 
-          {/* ── Push Notification Test (remove before release) ── */}
+          {/* Push Notification Test (remove before release) */}
           {/* <PushNotificationTest /> */}
 
           <View className="w-full items-center justify-center p-4">
@@ -180,11 +183,11 @@ export default function Home() {
         </ScrollView>
       </View>
 
-      <PromoModal
-        visible={showPromo}
-        onClose={() => setShowPromo(false)}
-        promoItems={carouselData}
-        onPromoItemPress={handlePromoItemPress}
+      <VoucherModal
+        visible={showVoucher}
+        onClose={() => setShowVoucher(false)}
+        voucherItems={carouselData}
+        onVoucherItemPress={handleVoucherItemPress}
       />
 
       <AuthRequiredBottomSheet

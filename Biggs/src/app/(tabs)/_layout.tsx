@@ -1,4 +1,4 @@
-import CustomTabBar from "@/src/components/layout/customTabBar";
+﻿import CustomTabBar from "@/src/components/layout/customTabBar";
 import { Tabs } from "expo-router";
 import "../../../global.css";
 
@@ -10,10 +10,11 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="promos" />
+      <Tabs.Screen name="vouchers" />
       <Tabs.Screen name="store-locator" />
       <Tabs.Screen name="menu" />
       <Tabs.Screen name="more" />
     </Tabs>
   );
 }
+

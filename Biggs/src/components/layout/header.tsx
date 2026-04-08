@@ -10,9 +10,11 @@ type HeaderProps = {
   title?: string;
   hasBackButton?: boolean;
   hasNotifications?: boolean;
+  hasHistory?: boolean;
   isLoggedIn?: boolean;
   hasLogout?: boolean;
   onBackPress?: () => void;
+  onHistoryPress?: () => void;
   useConfirmation?: boolean;
   confirmTitle?: string;
   confirmDescription?: string;
@@ -38,8 +40,10 @@ export default function Header() {
 export function HeaderBigLogo({
   hasBackButton,
   hasNotifications,
+  hasHistory,
   isLoggedIn,
   hasLogout,
+  onHistoryPress,
   useConfirmation,
   confirmTitle = "Are you sure?",
   confirmDescription = "Any unsaved changes will be lost.",
@@ -100,7 +104,7 @@ export function HeaderBigLogo({
     >
       {/* Blue background bar */}
       <View
-        className={`w-full flex-row ${hasBackButton ? "justify-between" : "justify-end"} items-center bg-lightBlue absolute top-0 h-16 px-7`}
+        className={`w-full flex-row ${hasBackButton || hasHistory ? "justify-between" : "justify-end"} items-center bg-lightBlue absolute top-0 h-16 px-7`}
       >
         {hasBackButton && (
           <Pressable onPress={() => triggerAction("back")}>
@@ -108,19 +112,32 @@ export function HeaderBigLogo({
           </Pressable>
         )}
 
-        {hasNotifications && isLoggedIn !== false && (
+        {hasHistory && (
           <Pressable
-            onPress={() => router.push("/(notifications)/notifications")}
+            onPress={
+              onHistoryPress ??
+              (() => router.push("/(vouchers)/voucher-history"))
+            }
           >
-            <Ionicons name="notifications-outline" size={32} color="white" />
+            <MaterialCommunityIcons name="history" size={30} color="white" />
           </Pressable>
         )}
 
-        {hasLogout && (
-          <Pressable onPress={() => triggerAction("logout")}>
-            <MaterialCommunityIcons name="logout" size={32} color="white" />
-          </Pressable>
-        )}
+        <View className="flex-row items-center gap-4">
+          {hasNotifications && isLoggedIn !== false && (
+            <Pressable
+              onPress={() => router.push("/(notifications)/notifications")}
+            >
+              <Ionicons name="notifications-outline" size={32} color="white" />
+            </Pressable>
+          )}
+
+          {hasLogout && (
+            <Pressable onPress={() => triggerAction("logout")}>
+              <MaterialCommunityIcons name="logout" size={32} color="white" />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Logo — overflows below the blue bar intentionally */}

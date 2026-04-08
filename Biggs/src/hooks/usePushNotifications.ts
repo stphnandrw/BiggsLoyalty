@@ -1,7 +1,7 @@
-import {
-  NOTIFICATION_ACTIONS,
-  checkInactivityAndNotify,
-  registerNotificationCategories,
+﻿import {
+    NOTIFICATION_ACTIONS,
+    checkInactivityAndNotify,
+    registerNotificationCategories,
 } from "@/src/services/notifications";
 import { setItem } from "@/src/utils/asyncStorage";
 import Constants from "expo-constants";
@@ -99,14 +99,14 @@ export function usePushNotifications(): PushNotificationState {
         actionId === NOTIFICATION_ACTIONS.VIEW_OFFERS ||
         actionId === NOTIFICATION_ACTIONS.SEE_OFFERS
       ) {
-        router.push("/(tabs)/promos");
+        router.push("/(tabs)/vouchers");
       } else if (actionId === NOTIFICATION_ACTIONS.LOG_IN) {
         router.push("/(auth)/login");
       } else if (data?.screen) {
         // Fallback: use the screen embedded in the notification data
         router.push(data.screen as any);
       }
-      // REMIND_LATER and NOT_NOW actions do nothing — opensAppToForeground: false
+      // REMIND_LATER and NOT_NOW actions do nothing - opensAppToForeground: false
       // means the app won't even open for those.
     }
 

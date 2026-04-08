@@ -90,7 +90,7 @@ export default function PushNotificationTest() {
       {/* ── WE_MISS_YOU ────────────────────────────────────────────────── */}
       <NotificationCard
         title='💛 "We miss you"'
-        description='Re-engagement push. Actions: "View Offers" (→ Promos) + "Not Now".'
+        description='Re-engagement push. Actions: "View Offers" (-> Vouchers) + "Not Now".'
         onLocal={() => fireLocal("WE_MISS_YOU")}
         onRemote={() => fireRemote("WE_MISS_YOU")}
         sending={sending}
@@ -110,7 +110,7 @@ export default function PushNotificationTest() {
       {/* ── NEW_OFFERS ─────────────────────────────────────────────────── */}
       <NotificationCard
         title='🎉 "Exclusive offers just for you"'
-        description='Promo push. Actions: "See Offers" (→ Promos) + "Dismiss".'
+        description='Voucher push. Actions: "See Offers" (-> Vouchers) + "Dismiss".'
         onLocal={() => fireLocal("NEW_OFFERS")}
         onRemote={() => fireRemote("NEW_OFFERS")}
         sending={sending}

@@ -48,6 +48,10 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
       }, 300);
     };
 
+    console.log("Branch details:", branch);
+
+    const hasFunctionHall = Boolean(branch?.hasVenueHall);
+
     // Images for carousel
     const BASE_IMAGE_URL = "https://biggs.ph/biggs_website/controls/uploads/";
     function withBaseUrl(img: string): string {
@@ -148,9 +152,6 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
                 <Text className="font-kanitBold text-xl">{branch?.title}</Text>
                 <Text className="font-kanitBold text-xl">{address}</Text>
               </View>
-              <View className="w-[20%] items-end border">
-                <Text className="font-kanitBold">Price</Text>
-              </View>
             </View>
 
             {hasImages && (
@@ -160,6 +161,7 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
                 autoPlay={images.length > 1}
               />
             )}
+
             <View className="flex-row justify-between items-start gap-1">
               <View className="flex-1 border">
                 <Text className="font-kanitBold text-lg">Description</Text>
@@ -167,6 +169,8 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
                   <Text className="text-gray-700 text-sm font-kanitSemiBold">
                     {time}
                   </Text>
+                </View>
+                <View className="flex-row items-center">
                   <Text className="text-gray-700 text-sm font-kanitSemiBold">
                     {features}
                   </Text>
@@ -187,11 +191,12 @@ const BranchDetail = forwardRef<any, BranchDetailsProps>(
                 />
               </View>
             )}
-
-            <SmallPrimaryButton
-              buttonName="Book Event"
-              onPress={handleBookAppointment}
-            />
+            {hasFunctionHall && (
+              <SmallPrimaryButton
+                buttonName="Book Event"
+                onPress={handleBookAppointment}
+              />
+            )}
           </View>
         </BottomSheetView>
       </BottomSheetModal>

@@ -15,7 +15,6 @@ class BookingModel extends Model
         'slot_id',
         'package_id',
         'tag_uid',
-        'party_size',
         'note',
         'status',
     ];
@@ -32,15 +31,30 @@ class BookingModel extends Model
         return (int) $this->getInsertID();
     }
 
+    public function checkBookingExists($tagUid, $slotId)
+    {
+        return $this->where('tag_uid', $tagUid)
+            ->where('slot_id', $slotId)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->first();
+    }
+
     public function getBookingsByTagUid($tagUid)
     {
         return $this->db->table('bookings b')
-            ->select('b.*, b.booking_id AS id, s.branch_id, s.slot_date, s.time_start, s.time_end, s.max_seats, p.package_name, p.price as price_per_head')
+            ->select('b.*, b.booking_id AS id, s.branch_id, s.slot_date, s.time_start, s.time_end, p.package_name, p.pax_size, p.price as price_per_head')
             ->join('booking_slots s', 's.slot_id = b.slot_id', 'left')
             ->join('packages p', 'p.package_id = b.package_id', 'left')
             ->where('b.tag_uid', $tagUid)
             ->orderBy('b.created_at', 'DESC')
             ->get()
             ->getResultArray();
+    }
+
+    public function countBookingsByTagUid($tagUid)
+    {
+        return $this->where('tag_uid', $tagUid)
+            ->whereIn('status', ['pending'])
+            ->countAllResults();
     }
 }

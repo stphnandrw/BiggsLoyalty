@@ -1,20 +1,20 @@
-import { FontAwesome6 } from "@expo/vector-icons";
+﻿import { FontAwesome6 } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Dimensions, Image, Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  Extrapolation,
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
+    Extrapolation,
+    interpolate,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
 } from "react-native-reanimated";
 
 const { width: PAGE_WIDTH } = Dimensions.get("window");
 
-// ─── TUNABLE: How far (in % of screen width) the user must drag before the
+// â”€â”€â”€ TUNABLE: How far (in % of screen width) the user must drag before the
 //              card flies off and the action triggers. Lower = easier to trigger.
 //              e.g. 0.25 = 25%, 0.4 = 40%
 const SWIPE_THRESHOLD = PAGE_WIDTH * 0.3;
@@ -25,7 +25,7 @@ interface CardProps {
   balance?: number;
   currency?: string;
   occasion?: string;
-  promo_name?: string;
+  voucher_name?: string;
   description?: string;
   required_points?: number | string;
   image_url?: string;
@@ -33,7 +33,7 @@ interface CardProps {
   logoRef?: any;
   isRedeemed?: boolean;
   isFavorited?: boolean;
-  /** "right" = Biggs Promos (like), "left" = Liked Promos (unlike) */
+  /** "right" = Biggs Vouchers (like), "left" = Liked Vouchers (unlike) */
   swipeDirection?: "left" | "right";
   onPress?: () => void;
   onToggleFavorite?: () => void;
@@ -53,9 +53,9 @@ interface ProductCardProps {
   onAdd?: () => void;
 }
 
-// ─── Gift Card ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Gift Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function GiftCard({
-  promo_name,
+  voucher_name,
   required_points,
   isRedeemed = false,
   isFavorited = false,
@@ -70,7 +70,7 @@ export function GiftCard({
 
   const checkerCells = Array.from({ length: 12 });
 
-  // ── Shared values (these drive all animations) ─────────────────────────────
+  // â”€â”€ Shared values (these drive all animations) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const rotateZ = useSharedValue(0);
@@ -82,7 +82,7 @@ export function GiftCard({
     onToggleFavorite?.();
   };
 
-  // ── Fly-off animation (plays when swipe threshold is crossed) ──────────────
+  // â”€â”€ Fly-off animation (plays when swipe threshold is crossed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const flyOff = (direction: "left" | "right") => {
     "worklet";
     const target = direction === "right" ? PAGE_WIDTH * 1.3 : -PAGE_WIDTH * 1.3;
@@ -119,12 +119,12 @@ export function GiftCard({
     );
   };
 
-  // ── Snap-back animation (plays when swipe is released below threshold) ─────
+  // â”€â”€ Snap-back animation (plays when swipe is released below threshold) â”€â”€â”€â”€â”€
   const snapBack = () => {
     "worklet";
     translateX.value = withSpring(0, {
-      // TUNABLE: damping controls bounciness — lower = more bounce, higher = less.
-      //          stiffness controls speed of snap — higher = faster return.
+      // TUNABLE: damping controls bounciness â€” lower = more bounce, higher = less.
+      //          stiffness controls speed of snap â€” higher = faster return.
       damping: 15,
       stiffness: 200,
     });
@@ -137,7 +137,7 @@ export function GiftCard({
     rightHintOpacity.value = withTiming(0, { duration: 150 });
   };
 
-  // ── Pan gesture (updates animations while the user is actively dragging) ───
+  // â”€â”€ Pan gesture (updates animations while the user is actively dragging) â”€â”€â”€
   const panGesture = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .failOffsetY([-8, 8]) // Prevent vertical drags from activating the gesture
@@ -152,7 +152,7 @@ export function GiftCard({
 
       translateX.value = dx;
 
-      // ── Vertical lift ──────────────────────────────────────────────────────
+      // â”€â”€ Vertical lift â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // TUNABLE: The card floats upward as you drag. The second value in the
       //          output range [-10] is the max upward offset in px. Set to 0
       //          to disable the lift entirely.
@@ -163,7 +163,7 @@ export function GiftCard({
         Extrapolation.CLAMP,
       );
 
-      // ── Tilt / rotation ────────────────────────────────────────────────────
+      // â”€â”€ Tilt / rotation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // TUNABLE: The output range [-12, 0, 12] controls max tilt in degrees.
       //          Reduce to e.g. [-5, 0, 5] for a subtle tilt, or set to
       //          [0, 0, 0] to disable rotation completely.
@@ -174,7 +174,7 @@ export function GiftCard({
         Extrapolation.CLAMP,
       );
 
-      // ── Hint label fade-in ─────────────────────────────────────────────────
+      // â”€â”€ Hint label fade-in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // TUNABLE: The input range controls at what drag distance the hint starts
       //          fading in. Currently starts at 30% of SWIPE_THRESHOLD and
       //          reaches full opacity at SWIPE_THRESHOLD.
@@ -213,7 +213,7 @@ export function GiftCard({
       }
     });
 
-  // ── Animated styles ────────────────────────────────────────────────────────
+  // â”€â”€ Animated styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -233,7 +233,7 @@ export function GiftCard({
 
   return (
     <View className="w-[90%] mb-3" style={{ alignSelf: "center" }}>
-      {/* ── Action hints behind the card ── */}
+      {/* â”€â”€ Action hints behind the card â”€â”€ */}
       <View
         className="absolute inset-0 flex-row justify-between items-center px-5 rounded-[18px]"
         pointerEvents="none"
@@ -265,7 +265,7 @@ export function GiftCard({
         )}
       </View>
 
-      {/* ── Draggable card ── */}
+      {/* â”€â”€ Draggable card â”€â”€ */}
       <GestureDetector gesture={panGesture}>
         <Animated.View
           style={[cardStyle, { borderRadius: 18, overflow: "hidden" }]}
@@ -281,7 +281,7 @@ export function GiftCard({
               elevation: 5,
             }}
           >
-            {/* ── LEFT: Sky blue hero panel ── */}
+            {/* â”€â”€ LEFT: Sky blue hero panel â”€â”€ */}
             <View className="w-[210px] bg-[#29AAE1] px-4 pt-4 pb-4 justify-between overflow-hidden">
               <View>
                 <Text className="text-white/60 text-[9px] font-kanitMedium uppercase tracking-[2.5px] mb-0.5">
@@ -307,18 +307,18 @@ export function GiftCard({
 
               <View>
                 <Text className="text-white/60 text-[9px] font-kanitMedium uppercase tracking-[2.5px] mb-0.5">
-                  Promo
+                  Voucher
                 </Text>
                 <Text
                   className="text-white text-[22px] font-kanitBold uppercase leading-tight tracking-wide"
                   numberOfLines={2}
                 >
-                  {promo_name}
+                  {voucher_name}
                 </Text>
               </View>
             </View>
 
-            {/* ── RIGHT: Cream brand panel ── */}
+            {/* â”€â”€ RIGHT: Cream brand panel â”€â”€ */}
             <View className="flex-1 bg-[#F5F0E8] items-center justify-center py-3.5 px-2.5">
               <Image
                 source={require("../../../assets/images/biggs-logo.png")}
@@ -327,7 +327,7 @@ export function GiftCard({
               />
             </View>
 
-            {/* ── Redeemed overlay ── */}
+            {/* â”€â”€ Redeemed overlay â”€â”€ */}
             {isRedeemed && (
               <View className="absolute inset-0 bg-[#1A2F5E]/75 items-center justify-center rounded-[18px] z-10">
                 <View className="border-l-[3px] border-[#29AAE1] pl-3">
@@ -344,7 +344,7 @@ export function GiftCard({
   );
 }
 
-// ─── Discount Voucher Card ────────────────────────────────────────────────────
+// â”€â”€â”€ Discount Voucher Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function VoucherCard({
   description = "50% Discount",
   isRedeemed = false,
@@ -397,7 +397,7 @@ export function VoucherCard({
     </Pressable>
   );
 }
-// ─── Product Card ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Product Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function ProductCard({
   productName,
   subtitle1,
@@ -453,7 +453,7 @@ export function ProductCard({
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           className="items-center justify-center bg-[#2a2a2a]"
         >
-          <Text className="text-6xl">🍷</Text>
+          <Text className="text-3xl font-kanitBold text-white">No Image</Text>
         </View>
       )}
 

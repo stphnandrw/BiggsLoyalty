@@ -6,6 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
+$routes->get('testing/nfc-simulator', 'Home::nfcSimulator');
 $routes->group('user', function ($routes) {
     $routes->get('getUsers', 'UserController::getUsers');
     $routes->get('getUser', 'UserController::getUserByIdAndNumber');
@@ -31,16 +32,15 @@ $routes->group('user', function ($routes) {
 });
 
 
-$routes->group('favorites', function ($routes) {
-    $routes->post('remove', 'FavoriteController::removePromoFromFavorite');
-    $routes->post('add', 'FavoriteController::addPromoToFavorite');
-    $routes->post('menus', 'FavoriteController::getAllFavoriteMenuByUser');
-    $routes->post('promos', 'FavoriteController::getAllFavoritePromosByTagUid');
+$routes->group('claimed-vouchers', function ($routes) {
+    $routes->post('claim', 'FavoriteController::claimVoucher');
+    $routes->post('redeem', 'FavoriteController::redeemVoucher');
+    $routes->post('vouchers', 'FavoriteController::getAllClaimedVouchersByTagUid');
 });
 
-$routes->group('promos', function ($routes) {
-    $routes->get('/', 'PromoController::getAllPromos');
-    $routes->post('exclude-favorites', 'PromoController::getPromosExcludingFavorites');
+$routes->group('vouchers', function ($routes) {
+    $routes->get('/', 'VoucherController::getAllVouchers');
+    $routes->post('exclude-claimed', 'VoucherController::getVouchersExcludingClaimed');
 });
 
 $routes->group('menu', function ($routes) {
@@ -49,8 +49,10 @@ $routes->group('menu', function ($routes) {
 });
 
 $routes->group('booking', function ($routes) {
-    $routes->post('packages', 'BookingController::getBranchPackages');
+    $routes->post('branch-packages', 'BookingController::getBranchPackages');
     $routes->post('slots', 'BookingController::getAvailableSlots');
     $routes->post('create', 'BookingController::createBooking');
     $routes->post('my-bookings', 'BookingController::getMyBookings');
+    $routes->post('count', 'BookingController::getBookingCountByTagUid');
+    $routes->post('cancel', 'BookingController::cancelBooking');
 });

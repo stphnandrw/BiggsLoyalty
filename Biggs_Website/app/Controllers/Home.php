@@ -8,4 +8,9 @@ class Home extends BaseController
     {
         return view('welcome_message');
     }
+
+    public function nfcSimulator(): string
+    {
+        return view('Testing/NFC_Simulator');
+    }
 }

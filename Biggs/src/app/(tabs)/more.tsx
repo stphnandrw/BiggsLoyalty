@@ -1,6 +1,7 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
 import { MiniPrimaryButton } from "@/src/components/ui/Buttons";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
+import { getBookingCountByTagUid } from "@/src/services/api/bookings";
 import {
   getFavoriteBranchByCode,
   getFavoriteLocationByTagUid,
@@ -24,6 +25,7 @@ export default function Profile() {
   const [user, setUser] = useState<any>(null);
   const [favoriteBranch, setFavoriteBranch] = useState<any>(null);
   const [favoriteMenuItem, setFavoriteMenuItem] = useState<any>(null);
+  const [pendingBookingCount, setPendingBookingCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -75,6 +77,18 @@ export default function Profile() {
             }
           } catch {
             setFavoriteMenuItem(null);
+          }
+
+          try {
+            const bookingCount = await getBookingCountByTagUid(
+              parsedUser.tag_uid,
+            );
+
+            setPendingBookingCount(bookingCount);
+            console.log("Booking count for user:", bookingCount.booking_count);
+          } catch (error) {
+            console.error("Failed to fetch booking count:", error);
+            setPendingBookingCount(0);
           }
         } else {
           setFavoriteBranch(null);
@@ -221,7 +235,7 @@ export default function Profile() {
                 <ProfileMenuItem
                   icon="receipt-outline"
                   label="Scheduled Events"
-                  count={3}
+                  count={pendingBookingCount}
                   onPress={() => router.push("/(more)/scheduled-events")}
                 />
                 <ProfileMenuItem

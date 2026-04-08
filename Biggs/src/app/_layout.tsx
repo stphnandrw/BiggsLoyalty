@@ -1,4 +1,4 @@
-import { ScreenDebug } from "@/src/components/ScreenDebug";
+﻿import { ScreenDebug } from "@/src/components/ScreenDebug";
 import { UserRegistrationProvider } from "@/src/context/UserRegistrationContext";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -47,7 +47,7 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="splash" />
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(promos)" />
+                <Stack.Screen name="(vouchers)" />
                 <Stack.Screen name="(more)" />
                 <Stack.Screen name="(notifications)" />
                 <Stack.Screen name="(auth)" />
@@ -62,3 +62,4 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
