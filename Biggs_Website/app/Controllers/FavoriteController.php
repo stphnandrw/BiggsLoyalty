@@ -12,7 +12,11 @@ class FavoriteController extends BaseController
 
         $claimedVouchers = $this->favoriteModel->getClaimedVouchersByTagUid($tagUid);
 
-        return $this->response->setJSON($claimedVouchers);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Claimed vouchers fetched successfully',
+            'data' => $claimedVouchers,
+        ]);
     }
 
     public function claimVoucher()
@@ -24,18 +28,28 @@ class FavoriteController extends BaseController
         if (!$tagUid || !$voucherId) {
             return $this->response
                 ->setStatusCode(400)
-                ->setJSON(['message' => 'Missing tag_uid or voucher_id']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Missing tag_uid or voucher_id',
+                ]);
         }
 
         $result = $this->favoriteModel->claimVoucher($tagUid, $voucherId);
 
         if ($result) {
-            return $this->response->setJSON(['message' => 'Voucher claimed successfully']);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Voucher claimed successfully',
+                'data' => [],
+            ]);
         }
 
         return $this->response
             ->setStatusCode(500)
-            ->setJSON(['message' => 'Failed to claim voucher']);
+            ->setJSON([
+                'status' => 'error',
+                'message' => 'Failed to claim voucher',
+            ]);
     }
 
     public function redeemVoucher()
@@ -47,7 +61,10 @@ class FavoriteController extends BaseController
         if (!$tagUid || !$claimedVoucherId) {
             return $this->response
                 ->setStatusCode(400)
-                ->setJSON(['message' => 'Missing tag_uid or claimed_voucher_id']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Missing tag_uid or claimed_voucher_id',
+                ]);
         }
 
         $claimedVoucher = $this->favoriteModel->getClaimedVoucherForRedeem($claimedVoucherId);
@@ -55,19 +72,28 @@ class FavoriteController extends BaseController
         if (!$claimedVoucher) {
             return $this->response
                 ->setStatusCode(404)
-                ->setJSON(['message' => 'Claimed voucher not found']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Claimed voucher not found',
+                ]);
         }
 
         if (($claimedVoucher['tag_uid'] ?? null) !== $tagUid) {
             return $this->response
                 ->setStatusCode(403)
-                ->setJSON(['message' => 'Tag UID does not match claimed voucher owner']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Tag UID does not match claimed voucher owner',
+                ]);
         }
 
         if (!empty($claimedVoucher['claimed_at'])) {
             return $this->response
                 ->setStatusCode(409)
-                ->setJSON(['message' => 'Voucher already redeemed']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Voucher already redeemed',
+                ]);
         }
 
         $requiredPoints = (int) ($claimedVoucher['required_points'] ?? 0);
@@ -76,7 +102,10 @@ class FavoriteController extends BaseController
         if (!$loyalty) {
             return $this->response
                 ->setStatusCode(404)
-                ->setJSON(['message' => 'Loyalty account not found']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Loyalty account not found',
+                ]);
         }
 
         $currentPoints = (int) ($loyalty['points'] ?? 0);
@@ -85,9 +114,12 @@ class FavoriteController extends BaseController
             return $this->response
                 ->setStatusCode(400)
                 ->setJSON([
+                    'status' => 'error',
                     'message' => 'Not enough points to redeem this voucher',
-                    'required_points' => $requiredPoints,
-                    'current_points' => $currentPoints,
+                    'data' => [
+                        'required_points' => $requiredPoints,
+                        'current_points' => $currentPoints,
+                    ],
                 ]);
         }
 
@@ -104,7 +136,10 @@ class FavoriteController extends BaseController
             $db->transRollback();
             return $this->response
                 ->setStatusCode(400)
-                ->setJSON(['message' => 'Not enough points to redeem this voucher']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Not enough points to redeem this voucher',
+                ]);
         }
 
         $result = $this->favoriteModel->markVoucherRedeemed($claimedVoucherId);
@@ -113,7 +148,10 @@ class FavoriteController extends BaseController
             $db->transRollback();
             return $this->response
                 ->setStatusCode(500)
-                ->setJSON(['message' => 'Failed to redeem voucher']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to redeem voucher',
+                ]);
         }
 
         $db->transComplete();
@@ -121,7 +159,10 @@ class FavoriteController extends BaseController
         if (!$db->transStatus()) {
             return $this->response
                 ->setStatusCode(500)
-                ->setJSON(['message' => 'Failed to redeem voucher']);
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to redeem voucher',
+                ]);
         }
 
         $updatedLoyalty = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
@@ -129,14 +170,20 @@ class FavoriteController extends BaseController
 
         if ($result) {
             return $this->response->setJSON([
+                'status' => 'success',
                 'message' => 'Voucher redeemed successfully',
-                'required_points' => $requiredPoints,
-                'remaining_points' => $remainingPoints,
+                'data' => [
+                    'required_points' => $requiredPoints,
+                    'remaining_points' => $remainingPoints,
+                ],
             ]);
         }
 
         return $this->response
             ->setStatusCode(500)
-            ->setJSON(['message' => 'Failed to redeem voucher']);
+            ->setJSON([
+                'status' => 'error',
+                'message' => 'Failed to redeem voucher',
+            ]);
     }
 }

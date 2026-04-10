@@ -3,9 +3,9 @@ import { PrimaryButton } from "@/src/components/ui/Buttons";
 import { NormalInput } from "@/src/components/ui/Inputs";
 import { useRegistration } from "@/src/context/UserRegistrationContext";
 import {
-  checkUserExists,
-  createUser,
-  updateUser,
+    checkUserExists,
+    createUser,
+    updateUser,
 } from "@/src/services/api/user";
 import { saveLastLogin } from "@/src/services/notifications";
 import { getItem, setItem } from "@/src/utils/asyncStorage";
@@ -13,15 +13,15 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableWithoutFeedback,
-  View,
+    Animated,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

@@ -3,11 +3,11 @@ import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { NormalInput } from "@/src/components/ui/Inputs";
 import { handleApiError } from "@/src/services/api/api";
 import {
-  BookingPackage,
-  BookingSlot,
-  createBooking,
-  getAvailableBookingSlots,
-  getBranchPackages,
+    BookingPackage,
+    BookingSlot,
+    createBooking,
+    getAvailableBookingSlots,
+    getBranchPackages,
 } from "@/src/services/api/bookings";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -70,8 +70,7 @@ export default function BookAppointment() {
   });
 
   const packages: BookingPackage[] = useMemo(() => {
-    const data = packageResponse?.data;
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(packageResponse) ? packageResponse : [];
   }, [packageResponse]);
 
   useEffect(() => {
@@ -87,8 +86,7 @@ export default function BookAppointment() {
   });
 
   const slots: BookingSlot[] = useMemo(() => {
-    const data = slotResponse?.data;
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(slotResponse) ? slotResponse : [];
   }, [slotResponse]);
 
   const createBookingMutation = useMutation({

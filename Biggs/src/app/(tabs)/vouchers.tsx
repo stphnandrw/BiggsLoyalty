@@ -5,10 +5,11 @@ import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { getLoyaltyPoints } from "@/src/services/api/user";
 import {
-  claimVoucher,
-  getUserClaimedVouchers,
-  getVouchersExcludingClaimed,
+    claimVoucher,
+    getUserClaimedVouchers,
+    getVouchersExcludingClaimed,
 } from "@/src/services/api/vouchers";
+import type { ClaimedVoucher, Voucher, VoucherListItem } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -63,14 +64,12 @@ export default function Vouchers() {
     queryKey: ["vouchers", tagUid],
     queryFn: () => getVouchersExcludingClaimed(tagUid as string),
     enabled: !!tagUid,
-    select: (data) => (Array.isArray(data) ? data : []),
   });
 
   const { data: claimedVouchers = [], isLoading: isLoadingClaimed } = useQuery({
     queryKey: ["claimedVouchers", tagUid],
     queryFn: () => getUserClaimedVouchers(tagUid as string),
     enabled: !!tagUid,
-    select: (data) => (Array.isArray(data) ? data : []),
   });
 
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
@@ -128,45 +127,43 @@ export default function Vouchers() {
     animatePill(index);
   };
 
-  type Voucher = {
-    voucher_id: number;
-    voucher_name?: string;
-    claimed_voucher_id?: number;
-    claimed_at?: string | null;
-    date_redeemed?: string | null;
-    [key: string]: any;
-  };
-
-  const isRedeemedVoucher = (voucher: Voucher) =>
-    Boolean(voucher.date_redeemed ?? voucher.claimed_at);
+  const isRedeemedVoucher = (voucher: ClaimedVoucher) =>
+    Boolean(voucher.claimed_at);
 
   const activeClaimedVouchers = claimedVouchers.filter(
-    (voucher: Voucher) => !isRedeemedVoucher(voucher),
+    (voucher) => !isRedeemedVoucher(voucher),
   );
 
   const claimedVoucherIds = claimedVouchers.map((p) => p.voucher_id);
 
-  const filteredAllVouchers = allVouchers.filter((p: Voucher) =>
-    (p.voucher_name || "").toLowerCase().includes(currentSearch.toLowerCase()),
+  const filteredAllVouchers = allVouchers.filter((voucher: Voucher) =>
+    voucher.voucher_name.toLowerCase().includes(currentSearch.toLowerCase()),
   );
 
-  const filteredClaimedVouchers = activeClaimedVouchers.filter((p: Voucher) =>
-    (p.voucher_name || "").toLowerCase().includes(claimedSearch.toLowerCase()),
+  const filteredClaimedVouchers = activeClaimedVouchers.filter((voucher) =>
+    voucher.voucher_name.toLowerCase().includes(claimedSearch.toLowerCase()),
   );
 
-  const openVoucherDetails = (voucher: Voucher, redeemable: boolean) => {
+  const openVoucherDetails = (
+    voucher: VoucherListItem,
+    redeemable: boolean,
+  ) => {
+    const claimedVoucherId =
+      "claimed_voucher_id" in voucher ? voucher.claimed_voucher_id : "";
+    const claimedAt = "claimed_at" in voucher ? (voucher.claimed_at ?? "") : "";
+
     router.push({
       pathname: "/(vouchers)/voucher-details",
       params: {
         voucher_id: String(voucher.voucher_id),
-        claimed_voucher_id: String(voucher.claimed_voucher_id ?? ""),
+        claimed_voucher_id: String(claimedVoucherId),
         tag_uid: tagUid ?? "",
-        voucher_name: voucher.voucher_name ?? "",
-        description: voucher.description ?? "",
-        required_points: String(voucher.required_points ?? ""),
-        image_url: voucher.image_url ?? "",
-        claimed_at: voucher.claimed_at ?? "",
-        date_redeemed: voucher.date_redeemed ?? "",
+        voucher_name: voucher.voucher_name,
+        description: voucher.description,
+        required_points: String(voucher.required_points),
+        image_url: voucher.image_url,
+        claimed_at: claimedAt,
+        date_redeemed: "",
         redeemable: redeemable ? "true" : "false",
         current_points: String(loyaltyData?.points ?? "0"),
       },

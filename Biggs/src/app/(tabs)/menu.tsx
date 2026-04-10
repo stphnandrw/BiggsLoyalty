@@ -4,41 +4,31 @@ import { ProductCard } from "@/src/components/ui/Cards";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { getAllMenu } from "@/src/services/api/menu";
 import {
-  addFavoriteMenu,
-  getFavoriteMenuByTagUid,
+    addFavoriteMenu,
+    getFavoriteMenuByTagUid,
 } from "@/src/services/api/user";
+import type { MenuItem } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
 import {
-  clearFavoriteMenuItemSelectionMode,
-  getFavoriteMenuItemSelectionMode,
+    clearFavoriteMenuItemSelectionMode,
+    getFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { parseHtmlText } from "@/src/utils/htmlParser";
 import { useQuery } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Image,
+    Modal,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type MenuItem = {
-  m_id: string | number;
-  m_code?: string;
-  m_title?: string;
-  m_price?: string | number;
-  filename?: string;
-  type?: string;
-  position?: string | string[];
-  m_desc?: string;
-};
 
 const isMenuItemLike = (value: unknown): value is MenuItem => {
   if (!value || typeof value !== "object") {

@@ -3,15 +3,15 @@ import { MiniPrimaryButton } from "@/src/components/ui/Buttons";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { getBookingCountByTagUid } from "@/src/services/api/bookings";
 import {
-  getFavoriteBranchByCode,
-  getFavoriteLocationByTagUid,
-  getFavoriteMenuByCode,
-  getFavoriteMenuByTagUid,
+    getFavoriteBranchByCode,
+    getFavoriteLocationByTagUid,
+    getFavoriteMenuByCode,
+    getFavoriteMenuByTagUid,
 } from "@/src/services/api/user";
 import { getItem } from "@/src/utils/asyncStorage";
 import {
-  setFavoriteBranchSelectionMode,
-  setFavoriteMenuItemSelectionMode,
+    setFavoriteBranchSelectionMode,
+    setFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { parseAndRemoveOtherLines } from "@/src/utils/htmlParser";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -85,7 +85,7 @@ export default function Profile() {
             );
 
             setPendingBookingCount(bookingCount);
-            console.log("Booking count for user:", bookingCount.booking_count);
+            console.log("Booking count for user:", bookingCount);
           } catch (error) {
             console.error("Failed to fetch booking count:", error);
             setPendingBookingCount(0);

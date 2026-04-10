@@ -1,43 +1,36 @@
 ﻿import { GiftCard } from "@/src/components/ui/Cards";
 import { SearchInput } from "@/src/components/ui/Inputs";
+import type { ClaimedVoucher, VoucherListItem } from "@/src/types";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
-type Voucher = {
-  voucher_id: number;
-  voucher_name: string;
-  description: string;
-  required_points: number;
-  image_url: string;
-  claimed_voucher_id?: number;
-  claimed_at?: string | null;
-  date_redeemed?: string | null;
-  [key: string]: any;
-};
-
 type VoucherPageContentProps = {
   searchPlaceholder: string;
   onSearchChange: (text: string) => void;
-  vouchers: Voucher[];
+  vouchers: VoucherListItem[];
   claimedVoucherIds: number[];
   emptyMessage: string;
-  onViewVoucher: (voucher: Voucher) => void;
+  onViewVoucher: (voucher: VoucherListItem) => void;
   onToggleClaim: (voucherId: number, isClaimed: boolean) => void;
   scope: "all" | "claimed" | "history";
 };
 
 function getVoucherCardKey(
-  voucher: Voucher,
+  voucher: VoucherListItem,
   index: number,
   scope: string,
 ): string {
-  if (voucher.claimed_voucher_id)
+  if (isClaimedVoucher(voucher))
     return `${scope}-claimed-${voucher.claimed_voucher_id}`;
   if (voucher.voucher_id)
     return `${scope}-voucher-${voucher.voucher_id}-${index}`;
   return `${scope}-index-${index}`;
 }
+
+const isClaimedVoucher = (
+  voucher: VoucherListItem,
+): voucher is ClaimedVoucher => "claimed_voucher_id" in voucher;
 
 export function VoucherPageContent({
   searchPlaceholder,
@@ -70,9 +63,11 @@ export function VoucherPageContent({
                 description={voucher.description}
                 required_points={voucher.required_points}
                 image_url={voucher.image_url}
-                isRedeemed={Boolean(
-                  voucher.date_redeemed ?? voucher.claimed_at,
-                )}
+                isRedeemed={
+                  isClaimedVoucher(voucher)
+                    ? Boolean(voucher.claimed_at)
+                    : false
+                }
                 isFavorited={claimedVoucherIds.includes(voucher.voucher_id)}
                 swipeDirection={swipeDirection}
                 onToggleFavorite={() =>

@@ -9,7 +9,10 @@ class OtpController extends BaseController
         $data = $this->request->getJSON();
 
         if (!$data) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid JSON']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid JSON'
+            ]);
         }
 
         $tagUid = $data->tag_uid ?? null;
@@ -17,7 +20,10 @@ class OtpController extends BaseController
         $force = $data->force ?? false; // 👈 new flag
 
         if (!$phonenumber) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Phone number is required']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Phone number is required'
+            ]);
         }
 
         $existingOtp = $this->checkNumberForOtp($phonenumber);
@@ -25,6 +31,7 @@ class OtpController extends BaseController
         // Block only if NOT forcing
         if ($existingOtp && !$force) {
             return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
                 'message' => 'An OTP has already been sent. Please wait up to 5 minutes or request a new one.'
             ]);
         }
@@ -48,12 +55,16 @@ class OtpController extends BaseController
         ]);
 
         if (!$addOtp) {
-            return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to generate OTP']);
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => 'Failed to generate OTP'
+            ]);
         }
 
         return $this->response->setJSON([
+            'status' => 'success',
             'message' => $force ? 'OTP regenerated' : 'OTP generated',
-            'otp' => $otp // remove in production
+            'data' => []
         ]);
     }
 
@@ -62,40 +73,58 @@ class OtpController extends BaseController
         $data = $this->request->getJSON();
 
         if (!$data) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid JSON']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid JSON'
+            ]);
         }
 
         $phonenumber = $data->phone_number;
         $otp = $data->otp_code;
 
         if (!$phonenumber || !$otp) {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Phone number and OTP are required']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Phone number and OTP are required'
+            ]);
         }
 
         $latestOtp = $this->checkNumberForOtp($phonenumber);
 
         if (!$latestOtp) {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'OTP not found']);
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'OTP not found'
+            ]);
         }
 
         $time = date('Y-m-d H:i:s');
 
         if (strtotime($latestOtp['expires_at']) < strtotime($time)) {
             return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
                 'message' => 'OTP has expired',
-                'current_time' => $time,
-                'expires_at' => $latestOtp['expires_at'],
+                'data' => [
+                    'current_time' => $time,
+                    'expires_at' => $latestOtp['expires_at'],
+                ],
             ]);
         }
 
         if (password_verify($otp, $latestOtp['otp_code'])) {
             $this->otpModel->update($latestOtp['otp_id'], ['is_verified' => true]);
             return $this->response->setJSON([
+                'status' => 'success',
                 'message' => 'OTP verified successfully',
-                'time_check' => $time,
+                'data' => [
+                    'time_check' => $time,
+                ],
             ]);
         } else {
-            return $this->response->setStatusCode(400)->setJSON(['message' => 'Invalid OTP']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'status' => 'error',
+                'message' => 'Invalid OTP'
+            ]);
         }
     }
 

@@ -14,6 +14,7 @@ class MenuController extends BaseController
         $menus = $this->menuModel->getAllMenuItems();
         return $this->response->setJSON([
             'status' => 'success',
+            'message' => 'Menus fetched successfully',
             'data' => $menus
         ]);
     }
@@ -21,6 +22,10 @@ class MenuController extends BaseController
     public function getMenuCategories()
     {
         $categories = $this->menuModel->getMenuCategories();
-        return $this->response->setJSON($categories);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Menu categories fetched successfully',
+            'data' => $categories,
+        ]);
     }
 }

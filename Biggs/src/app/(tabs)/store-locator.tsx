@@ -2,27 +2,28 @@ import BranchDetail from "@/src/components/features/branch-details";
 import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { getOutlets } from "@/src/services/api/outlets";
 import { addFavoriteLocation, checkUserExists } from "@/src/services/api/user";
+import type { Outlet } from "@/src/types";
 import { getItem, setItem } from "@/src/utils/asyncStorage";
 import {
-  clearFavoriteBranchSelectionMode,
-  getFavoriteBranchSelectionMode,
+    clearFavoriteBranchSelectionMode,
+    getFavoriteBranchSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Mapbox, {
-  Camera,
-  LineLayer,
-  LocationPuck,
-  MapView,
-  PointAnnotation,
-  ShapeSource,
+    Camera,
+    LineLayer,
+    LocationPuck,
+    MapView,
+    PointAnnotation,
+    ShapeSource,
 } from "@rnmapbox/maps";
 import * as Location from "expo-location";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import {
-  GestureHandlerRootView,
-  Pressable,
+    GestureHandlerRootView,
+    Pressable,
 } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,20 +35,8 @@ const defaultCoordinate: [number, number] = [
   122.56434150000001, 13.652179200000027,
 ];
 
-// API response shape (snake_case, raw coordinate string)
-type OutletApi = {
-  id: number;
-  title: string;
-  description?: string;
-  images: string[];
-  contact?: string;
-  longlat: string;
-  function_hall_images?: string[];
-  has_function_hall?: boolean;
-};
-
 // UI-facing type: API shape + parsed coordinate
-type MappedOutlet = OutletApi & { coordinate: [number, number] };
+type MappedOutlet = Outlet & { coordinate: [number, number] };
 
 function getDistanceKm(
   lat1: number,
@@ -81,7 +70,7 @@ function parseLongLat(longlat: string): [number, number] | null {
 export default function Store() {
   const params = useLocalSearchParams<{ mode?: string | string[] }>();
 
-  function mapOutlet(outlet: OutletApi): MappedOutlet | null {
+  function mapOutlet(outlet: Outlet): MappedOutlet | null {
     const coordinate = parseLongLat(outlet.longlat);
     if (!coordinate) return null;
     return { ...outlet, coordinate };
@@ -128,7 +117,7 @@ export default function Store() {
     const loadOutlets = async () => {
       try {
         const response = await getOutlets();
-        const data = Array.isArray(response) ? (response as OutletApi[]) : [];
+        const data = Array.isArray(response) ? response : [];
         const mapped = data
           .map(mapOutlet)
           .filter((item): item is MappedOutlet => item !== null);

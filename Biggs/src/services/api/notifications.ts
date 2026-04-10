@@ -1,4 +1,19 @@
 import { api } from "@/src/services/api/api";
+import {
+  MarkReadResultSchema,
+  NotificationRowListSchema,
+} from "@/src/services/api/schemas/notifications";
+import type {
+  AppNotification,
+  MarkReadResult,
+  NotificationsPayload,
+} from "@/src/types";
+
+export type {
+  AppNotification,
+  MarkReadResult,
+  NotificationsPayload
+} from "@/src/types";
 
 type RawNotificationRow = {
   notification_id?: number | string;
@@ -15,29 +30,6 @@ type RawNotificationRow = {
   updated_at?: string | null;
 };
 
-export interface AppNotification {
-  notification_id: number;
-  notification_recipient_id: number;
-  title: string;
-  body: string;
-  type: string;
-  is_read: boolean;
-  read_at: string | null;
-  delivery_status: string;
-  data_payload: Record<string, unknown> | null;
-  created_at: string;
-}
-
-export interface NotificationsPayload {
-  notifications: AppNotification[];
-  unread_count: number;
-  meta: {
-    limit: number;
-    offset: number;
-    count: number;
-  };
-}
-
 interface NotificationsResponse {
   status?: string;
   data?: NotificationsPayload | RawNotificationRow[];
@@ -48,11 +40,6 @@ interface NotificationsResponse {
     offset?: number;
     count?: number;
   };
-}
-
-export interface MarkReadResult {
-  updated_count: number;
-  unread_count: number;
 }
 
 const toNumber = (value: unknown, fallback = 0): number => {
@@ -132,7 +119,8 @@ export const normalizeNotificationsPayload = (
   }
 
   if (Array.isArray(raw)) {
-    const notifications = raw.map(normalizeNotificationRow);
+    const safeRows = NotificationRowListSchema.parse(raw);
+    const notifications = safeRows.map(normalizeNotificationRow);
     return {
       notifications,
       unread_count: notifications.filter((item) => !item.is_read).length,
@@ -203,16 +191,18 @@ export const markNotificationAsRead = async (params: {
   notification_id: number;
 }): Promise<MarkReadResult> => {
   try {
-    const response = await api.post<MarkReadResult>(
-      "user/markNotificationAsRead",
-      {
-        tag_uid: params.tag_uid,
-        notification_ids: [params.notification_id],
-      },
-    );
+    const response = await api.post("user/markNotificationAsRead", {
+      tag_uid: params.tag_uid,
+      notification_ids: [params.notification_id],
+    });
 
     console.log("Mark Notification As Read API Response:", response.data);
-    return response.data;
+    const parsed = MarkReadResultSchema.parse(response.data);
+
+    return {
+      updated_count: parsed.updated_count ?? parsed.data?.updated_count ?? 0,
+      unread_count: parsed.unread_count ?? parsed.data?.unread_count ?? 0,
+    };
   } catch (error) {
     console.error("Mark Notification As Read API Error:", error);
     throw error;
@@ -224,12 +214,16 @@ export const markAllNotificationsAsRead = async (
   tag_uid: string,
 ): Promise<MarkReadResult> => {
   try {
-    const response = await api.post<MarkReadResult>(
-      "user/markAllNotificationsAsRead",
-      { tag_uid },
-    );
+    const response = await api.post("user/markAllNotificationsAsRead", {
+      tag_uid,
+    });
     console.log("Mark All Notifications As Read API Response:", response.data);
-    return response.data;
+    const parsed = MarkReadResultSchema.parse(response.data);
+
+    return {
+      updated_count: parsed.updated_count ?? parsed.data?.updated_count ?? 0,
+      unread_count: parsed.unread_count ?? parsed.data?.unread_count ?? 0,
+    };
   } catch (error) {
     console.error("Mark All Notifications As Read API Error:", error);
     throw error;

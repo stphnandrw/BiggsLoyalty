@@ -1,9 +1,9 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
 import { MiniGhostButton } from "@/src/components/ui/Buttons";
 import {
-  BookingRecord,
-  cancelBooking,
-  getMyBookings,
+    BookingRecord,
+    cancelBooking,
+    getMyBookings,
 } from "@/src/services/api/bookings";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useQuery } from "@tanstack/react-query";
@@ -72,8 +72,7 @@ export default function ScheduledEvents() {
   );
 
   const bookings: BookingRecord[] = useMemo(() => {
-    const data = bookingsResponse?.data;
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(bookingsResponse) ? bookingsResponse : [];
   }, [bookingsResponse]);
 
   return (

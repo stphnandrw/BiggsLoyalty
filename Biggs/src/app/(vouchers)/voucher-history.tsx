@@ -3,21 +3,13 @@ import { HeaderBigLogo } from "@/src/components/layout/header";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { getUserClaimedVouchers } from "@/src/services/api/vouchers";
+import type { ClaimedVoucher } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type Voucher = {
-  voucher_id: number;
-  voucher_name?: string;
-  claimed_voucher_id?: number;
-  claimed_at?: string | null;
-  date_redeemed?: string | null;
-  [key: string]: any;
-};
 
 export default function VoucherHistory() {
   const { isLoggedIn } = useAuthStatus();
@@ -47,37 +39,36 @@ export default function VoucherHistory() {
     queryKey: ["claimedVouchers", tagUid],
     queryFn: () => getUserClaimedVouchers(tagUid as string),
     enabled: !!tagUid,
-    select: (data) => (Array.isArray(data) ? data : []),
   });
 
-  const isRedeemedVoucher = (voucher: Voucher) =>
-    Boolean(voucher.date_redeemed ?? voucher.claimed_at);
+  const isRedeemedVoucher = (voucher: ClaimedVoucher) =>
+    Boolean(voucher.claimed_at);
 
-  const redeemedVouchers = claimedVouchers.filter((voucher: Voucher) =>
+  const redeemedVouchers = claimedVouchers.filter((voucher) =>
     isRedeemedVoucher(voucher),
   );
 
   const redeemedVoucherIds = redeemedVouchers.map(
-    (voucher: Voucher) => voucher.voucher_id,
+    (voucher) => voucher.voucher_id,
   );
 
-  const filteredRedeemedVouchers = redeemedVouchers.filter((voucher: Voucher) =>
-    (voucher.voucher_name || "").toLowerCase().includes(search.toLowerCase()),
+  const filteredRedeemedVouchers = redeemedVouchers.filter((voucher) =>
+    voucher.voucher_name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const openVoucherDetails = (voucher: Voucher) => {
+  const openVoucherDetails = (voucher: ClaimedVoucher) => {
     router.push({
       pathname: "/(vouchers)/voucher-details",
       params: {
         voucher_id: String(voucher.voucher_id),
         claimed_voucher_id: String(voucher.claimed_voucher_id ?? ""),
         tag_uid: tagUid ?? "",
-        voucher_name: voucher.voucher_name ?? "",
-        description: voucher.description ?? "",
-        required_points: String(voucher.required_points ?? ""),
-        image_url: voucher.image_url ?? "",
+        voucher_name: voucher.voucher_name,
+        description: voucher.description,
+        required_points: String(voucher.required_points),
+        image_url: voucher.image_url,
         claimed_at: voucher.claimed_at ?? "",
-        date_redeemed: voucher.date_redeemed ?? "",
+        date_redeemed: "",
         redeemable: "false",
       },
     });
@@ -106,7 +97,11 @@ export default function VoucherHistory() {
               vouchers={filteredRedeemedVouchers}
               claimedVoucherIds={redeemedVoucherIds}
               emptyMessage={`No redeemed vouchers yet.\nRedeem a voucher to see it here.`}
-              onViewVoucher={(voucher) => openVoucherDetails(voucher)}
+              onViewVoucher={(voucher) => {
+                if ("claimed_voucher_id" in voucher) {
+                  openVoucherDetails(voucher);
+                }
+              }}
               onToggleClaim={() => {}}
               scope="history"
             />

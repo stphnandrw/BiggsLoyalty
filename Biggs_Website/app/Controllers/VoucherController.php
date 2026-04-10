@@ -8,7 +8,11 @@ class VoucherController extends BaseController
     {
         $vouchers = $this->voucherModel->findAll();
 
-        return $this->response->setJSON($vouchers);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Vouchers fetched successfully',
+            'data' => $vouchers,
+        ]);
     }
 
     public function getVouchersExcludingClaimed()
@@ -19,6 +23,10 @@ class VoucherController extends BaseController
 
         $vouchers = $this->voucherModel->getVouchersExcludingClaimed($tagUid);
 
-        return $this->response->setJSON($vouchers);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Available vouchers fetched successfully',
+            'data' => $vouchers,
+        ]);
     }
 }

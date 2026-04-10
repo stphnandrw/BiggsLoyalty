@@ -65,9 +65,10 @@ $routes->group('booking', function ($routes) {
 });
 
 $routes->group('notifications', function ($routes) {
-    $routes->post('list', 'UserController::list');
-    $routes->patch('mark-read', 'UserController::markRead');
-    $routes->post('mark-read', 'UserController::markRead');
+    $routes->post('list', 'UserController::getNotificationRecipientsByTagUid');
+    $routes->patch('mark-read', 'UserController::markNotificationAsRead');
+    $routes->post('mark-read', 'UserController::markNotificationAsRead');
+    $routes->post('mark-all-read', 'UserController::markAllNotificationsAsRead');
 });
 
 $routes->group('admin/notifications', function ($routes) {

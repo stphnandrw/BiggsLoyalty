@@ -1,5 +1,12 @@
 import axios, { AxiosError, isAxiosError } from "axios";
 
+type ApiErrorPayload = {
+  message?: string;
+  data?: {
+    message?: string;
+  };
+};
+
 export const api = axios.create({
   baseURL: "http://192.168.4.222:8080", // Office
   // baseURL: "http://192.168.0.58:8082", // Home
@@ -12,10 +19,14 @@ export const api = axios.create({
 
 export const handleApiError = (error: unknown): string => {
   if (isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ message?: string }>;
+    const axiosError = error as AxiosError<ApiErrorPayload>;
+    const payload = axiosError.response?.data;
 
     return (
-      axiosError.response?.data?.message || axiosError.message || "API Error"
+      payload?.message ||
+      payload?.data?.message ||
+      axiosError.message ||
+      "API Error"
     );
   }
 
