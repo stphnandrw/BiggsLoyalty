@@ -50,13 +50,9 @@ interface NotificationsResponse {
   };
 }
 
-interface MarkReadResponse {
-  status: string;
-  message: string;
-  data: {
-    updated_count: number;
-    unread_count: number;
-  };
+export interface MarkReadResult {
+  updated_count: number;
+  unread_count: number;
 }
 
 const toNumber = (value: unknown, fallback = 0): number => {
@@ -201,17 +197,41 @@ export const getNotificationRecipientsByTagUid = async (
   }
 };
 
-export const markNotificationsAsRead = async (params: {
+// mark a single notification as read
+export const markNotificationAsRead = async (params: {
   tag_uid: string;
-  notification_ids: number[];
-}): Promise<MarkReadResponse["data"]> => {
-  const response = await api.patch<MarkReadResponse>(
-    "/notifications/mark-read",
-    {
-      tag_uid: params.tag_uid,
-      notification_ids: params.notification_ids,
-    },
-  );
+  notification_id: number;
+}): Promise<MarkReadResult> => {
+  try {
+    const response = await api.post<MarkReadResult>(
+      "user/markNotificationAsRead",
+      {
+        tag_uid: params.tag_uid,
+        notification_ids: [params.notification_id],
+      },
+    );
 
-  return response.data.data;
+    console.log("Mark Notification As Read API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Mark Notification As Read API Error:", error);
+    throw error;
+  }
+};
+
+// mark all notifications as read for a user
+export const markAllNotificationsAsRead = async (
+  tag_uid: string,
+): Promise<MarkReadResult> => {
+  try {
+    const response = await api.post<MarkReadResult>(
+      "user/markAllNotificationsAsRead",
+      { tag_uid },
+    );
+    console.log("Mark All Notifications As Read API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Mark All Notifications As Read API Error:", error);
+    throw error;
+  }
 };

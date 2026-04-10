@@ -2,7 +2,8 @@ import { HeaderBigLogo } from "@/src/components/layout/header";
 import {
   AppNotification,
   getNotificationRecipientsByTagUid,
-  markNotificationsAsRead,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
   NotificationsPayload,
 } from "@/src/services/api/notifications";
 import { getItem } from "@/src/utils/asyncStorage";
@@ -61,12 +62,21 @@ export default function Notifications() {
   );
 
   const markReadMutation = useMutation({
-    mutationFn: (notificationIds: number[]) =>
-      markNotificationsAsRead({
+    mutationFn: async (notificationId: number) => {
+      console.log("[Notifications] markNotificationAsRead request", {
         tag_uid: tagUid,
-        notification_ids: notificationIds,
-      }),
-    onMutate: async (notificationIds) => {
+        notification_id: notificationId,
+      });
+
+      const response = await markNotificationAsRead({
+        tag_uid: tagUid,
+        notification_id: notificationId,
+      });
+
+      console.log("[Notifications] markNotificationAsRead response", response);
+      return response;
+    },
+    onMutate: async (notificationId: number) => {
       await queryClient.cancelQueries({ queryKey: ["notifications", tagUid] });
 
       const previous = queryClient.getQueryData<NotificationsPayload>([
@@ -75,7 +85,7 @@ export default function Notifications() {
       ]);
 
       if (previous) {
-        const markedIds = new Set(notificationIds);
+        const markedIds = new Set([notificationId]);
         const nextNotifications = previous.notifications.map((item) =>
           markedIds.has(item.notification_id)
             ? { ...item, is_read: true, read_at: new Date().toISOString() }
@@ -92,6 +102,57 @@ export default function Notifications() {
             ...previous,
             notifications: nextNotifications,
             unread_count: nextUnread,
+          },
+        );
+      }
+
+      return { previous };
+    },
+    onError: (error, _variables, context) => {
+      console.log("[Notifications] markNotificationAsRead error", error);
+      const errorWithResponse = error as {
+        response?: { status?: number; data?: unknown };
+      };
+      if (errorWithResponse.response) {
+        console.log("[Notifications] markNotificationAsRead error response", {
+          status: errorWithResponse.response.status,
+          data: errorWithResponse.response.data,
+        });
+      }
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications", tagUid], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["notifications", tagUid],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["notificationsUnread", tagUid],
+      });
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => markAllNotificationsAsRead(tagUid),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications", tagUid] });
+
+      const previous = queryClient.getQueryData<NotificationsPayload>([
+        "notifications",
+        tagUid,
+      ]);
+
+      if (previous) {
+        const readAt = new Date().toISOString();
+        queryClient.setQueryData<NotificationsPayload>(
+          ["notifications", tagUid],
+          {
+            ...previous,
+            notifications: previous.notifications.map((item) =>
+              item.is_read ? item : { ...item, is_read: true, read_at: readAt },
+            ),
+            unread_count: 0,
           },
         );
       }
@@ -120,8 +181,34 @@ export default function Notifications() {
       <Pressable
         className="w-full rounded-xl border border-gray-200 bg-white p-4 mb-3"
         onPress={() => {
-          if (!item.is_read && !markReadMutation.isPending) {
-            markReadMutation.mutate([item.notification_id]);
+          console.log("[Notifications] pressed notification", {
+            notification_id: item.notification_id,
+            notification_recipient_id: item.notification_recipient_id,
+            is_read: item.is_read,
+            markReadPending: markReadMutation.isPending,
+            markAllPending: markAllReadMutation.isPending,
+            tag_uid: tagUid,
+          });
+
+          if (
+            !item.is_read &&
+            !markReadMutation.isPending &&
+            !markAllReadMutation.isPending
+          ) {
+            console.log("[Notifications] triggering mark-as-read", {
+              notification_id: item.notification_id,
+            });
+            markReadMutation.mutate(item.notification_id);
+          } else {
+            console.log("[Notifications] mark-as-read skipped", {
+              reason: item.is_read
+                ? "already_read"
+                : markReadMutation.isPending
+                  ? "single_mark_pending"
+                  : markAllReadMutation.isPending
+                    ? "mark_all_pending"
+                    : "unknown",
+            });
           }
         }}
       >
@@ -143,6 +230,11 @@ export default function Notifications() {
 
   const notifications = notificationsQuery.data?.notifications ?? [];
   const unreadCount = notificationsQuery.data?.unread_count ?? 0;
+  const markAllDisabled =
+    unreadCount === 0 ||
+    markAllReadMutation.isPending ||
+    markReadMutation.isPending ||
+    notificationsQuery.isLoading;
 
   return (
     <SafeAreaView
@@ -156,9 +248,30 @@ export default function Notifications() {
           <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
             Notifications
           </Text>
-          <Text className="text-red-500 text-sm font-kanitMedium">
-            {unreadCount} unread
-          </Text>
+          <View className="items-end gap-1">
+            <Text className="text-red-500 text-sm font-kanitMedium">
+              {unreadCount} unread
+            </Text>
+            <Pressable
+              className="rounded-md border border-darkBlue px-3 py-1"
+              disabled={markAllDisabled}
+              onPress={() => {
+                if (!markAllDisabled) {
+                  markAllReadMutation.mutate();
+                }
+              }}
+            >
+              <Text
+                className={`text-xs font-kanitMedium ${
+                  markAllDisabled ? "text-gray-400" : "text-darkBlue"
+                }`}
+              >
+                {markAllReadMutation.isPending
+                  ? "Marking..."
+                  : "Mark all as read"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         {notificationsQuery.isLoading ? (

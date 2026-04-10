@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Libraries\Notification;
+namespace App\Services;
 
 use App\Models\NotificationModel;
 use App\Models\NotificationQueueModel;
 use App\Models\NotificationRecipientModel;
 use App\Models\UserModel;
 use App\Models\UserTokensModel;
+use CodeIgniter\Database\BaseConnection;
 
 class NotificationService
 {
@@ -16,15 +17,24 @@ class NotificationService
     protected UserModel $userModel;
     protected UserTokensModel $userTokensModel;
     protected ExpoPushService $expoPushService;
+    protected BaseConnection $db;
 
-    public function __construct()
-    {
-        $this->notificationModel = new NotificationModel();
-        $this->recipientModel = new NotificationRecipientModel();
-        $this->queueModel = new NotificationQueueModel();
-        $this->userModel = new UserModel();
-        $this->userTokensModel = new UserTokensModel();
-        $this->expoPushService = new ExpoPushService();
+    public function __construct(
+        NotificationModel $notificationModel,
+        NotificationRecipientModel $recipientModel,
+        NotificationQueueModel $queueModel,
+        UserModel $userModel,
+        UserTokensModel $userTokensModel,
+        ExpoPushService $expoPushService,
+        BaseConnection $db
+    ) {
+        $this->notificationModel = $notificationModel;
+        $this->recipientModel = $recipientModel;
+        $this->queueModel = $queueModel;
+        $this->userModel = $userModel;
+        $this->userTokensModel = $userTokensModel;
+        $this->expoPushService = $expoPushService;
+        $this->db = $db;
     }
 
     public function createNotification(array $input): array
@@ -122,15 +132,18 @@ class NotificationService
     {
         $notification = $this->notificationModel->find($notificationId);
         if (!$notification) {
+            log_message('error', 'Attempt to send non-existent notification_id {nid}', ['nid' => $notificationId]);
             throw new \RuntimeException('Notification not found');
         }
 
         if ($this->recipientModel->hasRecipients($notificationId)) {
+            log_message('warning', 'Attempt to resend notification_id {nid} which already has recipients', ['nid' => $notificationId]);
             throw new \RuntimeException('Notification has already been sent to recipients');
         }
 
         $users = $this->resolveTargetUsers($targetType, $targetUsers);
         if (empty($users)) {
+            log_message('error', 'No target users found for notification_id {nid}', ['nid' => $notificationId]);
             throw new \RuntimeException('No target users found for this notification');
         }
 
@@ -138,8 +151,7 @@ class NotificationService
         $isScheduled = $scheduledAt && strtotime((string) $scheduledAt) > time();
         $status = $isScheduled ? 'scheduled' : 'queued';
 
-        $db = \Config\Database::connect();
-        $db->transStart();
+        $this->db->transStart();
 
         $now = date('Y-m-d H:i:s');
 
@@ -154,7 +166,12 @@ class NotificationService
                 'updated_at' => $now,
             ];
         }
+
         if (!empty($recipientRows)) {
+            log_message('info', 'Inserting {count} recipients for notification_id {nid}', [
+                'count' => count($recipientRows),
+                'nid' => $notificationId,
+            ]);
             $this->recipientModel->insertBatch($recipientRows);
         }
 
@@ -170,9 +187,9 @@ class NotificationService
             'updated_at' => $now,
         ]);
 
-        $db->transComplete();
+        $this->db->transComplete();
 
-        if (!$db->transStatus()) {
+        if (!$this->db->transStatus()) {
             throw new \RuntimeException('Failed to send notification');
         }
 

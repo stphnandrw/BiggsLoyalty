@@ -2,7 +2,6 @@
 
 namespace App\Commands\Notification;
 
-use App\Libraries\Notification\NotificationService;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
@@ -15,7 +14,7 @@ class DispatchScheduledNotifications extends BaseCommand
     public function run(array $params)
     {
         $limit = (int) ($params[0] ?? 200);
-        $service = new NotificationService();
+        $service = service('notificationService');
         $result = $service->dispatchScheduled($limit);
 
         CLI::write('Scheduled found: ' . $result['scheduled_count'], 'yellow');

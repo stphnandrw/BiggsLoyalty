@@ -7,20 +7,6 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-
-use App\Models\UserModel;
-use App\Models\UserTokensModel;
-use App\Models\VoucherModel;
-use App\Models\FavoriteModel;
-use App\Models\OtpModel;
-use App\Models\BtcLoyaltyModel;
-use App\Models\MenuModel;
-use App\Models\BranchModel;
-use App\Models\BookingModel;
-use App\Models\BookingSlotModel;
-use App\Models\PackageModel;
-use App\Models\NotificationRecipientModel;
-
 /**
  * BaseController provides a convenient place for loading components
  * and performing functions that are needed by all your controllers.
@@ -66,23 +52,23 @@ abstract class BaseController extends Controller
         parent::initController($request, $response, $logger);
 
 
-        $this->userModel = new UserModel();
-        $this->userTokensModel = new UserTokensModel();
-        $this->voucherModel = new VoucherModel();
-        $this->favoriteModel = new FavoriteModel();
-        $this->otpModel = new OtpModel();
-        $this->btcLoyaltyModel = new BtcLoyaltyModel();
-        $this->menuModel = new MenuModel();
-        $this->branchModel = new BranchModel();
-        $this->bookingModel = new BookingModel();
-        $this->bookingSlotModel = new BookingSlotModel();
-        $this->packageModel = new PackageModel();
-        $this->notificationRecipientModel = new NotificationRecipientModel();
+        $this->userModel = service('userModel');
+        $this->userTokensModel = service('userTokensModel');
+        $this->voucherModel = service('voucherModel');
+        $this->favoriteModel = service('favoriteModel');
+        $this->otpModel = service('otpModel');
+        $this->btcLoyaltyModel = service('btcLoyaltyModel');
+        $this->menuModel = service('menuModel');
+        $this->branchModel = service('branchModel');
+        $this->bookingModel = service('bookingModel');
+        $this->bookingSlotModel = service('bookingSlotModel');
+        $this->packageModel = service('packageModel');
+        $this->notificationRecipientModel = service('notificationRecipientModel');
 
 
 
         $this->session = service('session');
-        
+
         // Preload any models, libraries, etc, here.
     }
 
@@ -118,4 +104,3 @@ abstract class BaseController extends Controller
         return !$this->request->isCLI();
     }
 }
-

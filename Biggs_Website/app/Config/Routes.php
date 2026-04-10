@@ -33,6 +33,9 @@ $routes->group('user', function ($routes) {
 
     // Notification routes
     $routes->post('getNotificationRecipientsByTagUid', 'UserController::getNotificationRecipientsByTagUid');
+    $routes->post('markNotificationAsRead', 'UserController::markNotificationAsRead');
+    $routes->post('markAllNotificationsAsRead', 'UserController::markAllNotificationsAsRead');
+    
 });
 
 

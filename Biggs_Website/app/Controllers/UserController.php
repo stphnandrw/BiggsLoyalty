@@ -425,4 +425,57 @@ class UserController extends BaseController
 
         return $this->response->setJSON($payload);
     }
+
+    public function markNotificationAsRead()
+    {
+        $data = $this->request->getJSON();
+        log_message('debug', 'Mark as read payload: ' . json_encode($data));
+
+        $tagUid = $data->tag_uid ?? null;
+        $notificationIds = $data->notification_ids ?? null;
+
+        if (!$tagUid || !is_array($notificationIds)) {
+            log_message('error', 'Missing tag_uid or notification_ids');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and notification IDs are required']);
+        }
+
+        $updatedCount = $this->notificationRecipientModel->markAsRead($tagUid, $notificationIds);
+
+        log_message('debug', 'Marked as read count: ' . $updatedCount);
+
+        return $this->response->setJSON([
+            'message' => 'Notifications marked as read',
+            'updated_count' => $updatedCount,
+        ]);
+    }
+
+    public function markAllNotificationsAsRead()
+    {
+        $data = $this->request->getJSON();
+        log_message('debug', 'Mark all as read payload: ' . json_encode($data));
+
+        $tagUid = $data->tag_uid ?? null;
+
+        if (!$tagUid) {
+            log_message('error', 'Tag UID missing');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
+        }
+
+        $recipientRows = $this->notificationRecipientModel->getRecipientIdsByTagUid($tagUid);
+        $notificationIds = array_map(static fn(array $row): int => (int) ($row['notification_id'] ?? 0), $recipientRows);
+
+        if (empty($notificationIds)) {
+            log_message('debug', 'No notifications to mark as read for tag_uid: ' . $tagUid);
+            return $this->response->setJSON(['message' => 'No notifications to mark as read']);
+        }
+
+        $updatedCount = $this->notificationRecipientModel->markAsRead($tagUid, $notificationIds);
+
+        log_message('debug', 'Marked all as read count: ' . $updatedCount);
+
+        return $this->response->setJSON([
+            'message' => 'All notifications marked as read',
+            'updated_count' => $updatedCount,
+        ]);
+    }
 }

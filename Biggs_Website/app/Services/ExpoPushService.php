@@ -1,9 +1,18 @@
 <?php
 
-namespace App\Libraries\Notification;
+namespace App\Services;
+
+use CodeIgniter\HTTP\CURLRequest;
 
 class ExpoPushService
 {
+    protected CURLRequest $httpClient;
+
+    public function __construct(CURLRequest $httpClient)
+    {
+        $this->httpClient = $httpClient;
+    }
+
     public function sendToTokens(array $tokens, array $payload): array
     {
         $tokens = array_values(array_filter(array_unique($tokens)));
@@ -28,8 +37,7 @@ class ExpoPushService
         }
 
         try {
-            $client = service('curlrequest');
-            $response = $client->post('https://exp.host/--/api/v2/push/send', [
+            $response = $this->httpClient->post('https://exp.host/--/api/v2/push/send', [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Accept-Encoding' => 'gzip, deflate',

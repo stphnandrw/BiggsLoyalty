@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
-use App\Libraries\Notification\NotificationService;
+use App\Services\NotificationService;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class AdminController extends BaseController
 {
@@ -10,9 +13,10 @@ class AdminController extends BaseController
 
     protected NotificationService $notificationService;
 
-    public function __construct()
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
-        $this->notificationService = new NotificationService();
+        parent::initController($request, $response, $logger);
+        $this->notificationService = service('notificationService');
     }
 
     public function index()
