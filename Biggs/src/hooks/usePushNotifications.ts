@@ -1,6 +1,5 @@
 ﻿import {
     NOTIFICATION_ACTIONS,
-    checkInactivityAndNotify,
     registerNotificationCategories,
 } from "@/src/services/notifications";
 import { setItem } from "@/src/utils/asyncStorage";
@@ -112,10 +111,6 @@ export function usePushNotifications(): PushNotificationState {
 
     // Register interactive action buttons (do this before listening for responses)
     registerNotificationCategories();
-
-    // Check if the user has been inactive and schedule a nudge if so.
-    // Uses the default production threshold of 7 days.
-    checkInactivityAndNotify();
 
     registerForPushNotificationsAsync()
       .then((token) => {

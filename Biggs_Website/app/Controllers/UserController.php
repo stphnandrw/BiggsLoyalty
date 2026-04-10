@@ -380,4 +380,49 @@ class UserController extends BaseController
         log_message('error', 'Failed to update user');
         return $this->response->setStatusCode(500)->setJSON(['message' => 'Failed to update user']);
     }
+
+    public function getNotificationRecipientsByTagUid()
+    {
+        $data = $this->request->getJSON();
+        log_message('debug', 'Payload: ' . json_encode($data));
+
+        $tagUid = $data->tag_uid ?? null;
+
+        if (!$tagUid) {
+            log_message('error', 'Tag UID missing');
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID is required']);
+        }
+
+        $rows = $this->notificationRecipientModel->getUserNotifications($tagUid);
+        $unreadCount = $this->notificationRecipientModel->countUnreadByTagUid($tagUid);
+
+        $notifications = array_map(static function (array $row): array {
+            return [
+                'notification_id' => (int) ($row['notification_id'] ?? 0),
+                'notification_recipient_id' => (int) ($row['notification_recipient_id'] ?? 0),
+                'title' => $row['title'] ?? null,
+                'body' => $row['body'] ?? null,
+                'type' => $row['type'] ?? 'general',
+                'is_read' => (bool) ($row['is_read'] ?? false),
+                'read_at' => $row['read_at'] ?? null,
+                'delivery_status' => $row['delivery_status'] ?? 'sent',
+                'data_payload' => !empty($row['data_payload']) ? json_decode($row['data_payload'], true) : null,
+                'created_at' => $row['created_at'] ?? null,
+            ];
+        }, $rows);
+
+        $payload = [
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount,
+            'meta' => [
+                'limit' => count($notifications),
+                'offset' => 0,
+                'count' => count($notifications),
+            ],
+        ];
+
+        log_message('debug', 'Notifications payload for tag_uid ' . $tagUid . ': ' . json_encode($payload));
+
+        return $this->response->setJSON($payload);
+    }
 }

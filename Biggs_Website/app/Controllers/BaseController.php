@@ -19,6 +19,7 @@ use App\Models\BranchModel;
 use App\Models\BookingModel;
 use App\Models\BookingSlotModel;
 use App\Models\PackageModel;
+use App\Models\NotificationRecipientModel;
 
 /**
  * BaseController provides a convenient place for loading components
@@ -38,7 +39,7 @@ abstract class BaseController extends Controller
      * The creation of dynamic property is deprecated in PHP 8.2.
      */
 
-    // protected $session;
+    protected $session;
     protected $userModel;
     protected $userTokensModel;
     protected $voucherModel;
@@ -50,6 +51,7 @@ abstract class BaseController extends Controller
     protected $bookingModel;
     protected $bookingSlotModel;
     protected $packageModel;
+    protected $notificationRecipientModel;
 
     /**
      * @return void
@@ -75,9 +77,45 @@ abstract class BaseController extends Controller
         $this->bookingModel = new BookingModel();
         $this->bookingSlotModel = new BookingSlotModel();
         $this->packageModel = new PackageModel();
+        $this->notificationRecipientModel = new NotificationRecipientModel();
+
+
+
+        $this->session = service('session');
         
         // Preload any models, libraries, etc, here.
-        // $this->session = service('session');
+    }
+
+    protected function getWebSessionValue(string $key)
+    {
+        if (!$this->isWebSessionRequest()) {
+            return null;
+        }
+
+        return $this->session->get($key);
+    }
+
+    protected function setWebSessionValue(string $key, $value): void
+    {
+        if (!$this->isWebSessionRequest()) {
+            return;
+        }
+
+        $this->session->set($key, $value);
+    }
+
+    protected function removeWebSessionValue(string $key): void
+    {
+        if (!$this->isWebSessionRequest()) {
+            return;
+        }
+
+        $this->session->remove($key);
+    }
+
+    private function isWebSessionRequest(): bool
+    {
+        return !$this->request->isCLI();
     }
 }
 

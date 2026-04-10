@@ -1,9 +1,11 @@
 import { ConfirmBottomSheet } from "@/src/components/ui/Modal";
-import { logout } from "@/src/utils/asyncStorage";
+import { getNotificationRecipientsByTagUid } from "@/src/services/api/notifications";
+import { getItem, logout } from "@/src/utils/asyncStorage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 type HeaderProps = {
@@ -52,6 +54,39 @@ export function HeaderBigLogo({
   const [pendingAction, setPendingAction] = useState<"back" | "logout" | null>(
     null,
   );
+  const [tagUid, setTagUid] = useState<string>("");
+
+  useEffect(() => {
+    const loadTagUid = async () => {
+      const userData = await getItem("userData");
+      if (!userData) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(userData) as { tag_uid?: string };
+        if (parsed.tag_uid) {
+          setTagUid(parsed.tag_uid);
+        }
+      } catch (error) {
+        console.error("Failed to parse userData in header:", error);
+      }
+    };
+
+    if (hasNotifications && isLoggedIn !== false) {
+      void loadTagUid();
+    }
+  }, [hasNotifications, isLoggedIn]);
+
+  const unreadQuery = useQuery({
+    queryKey: ["notificationsUnread", tagUid],
+    queryFn: async () => {
+      const payload = await getNotificationRecipientsByTagUid(tagUid);
+      return payload.unread_count;
+    },
+    enabled: !!tagUid && !!hasNotifications && isLoggedIn !== false,
+    refetchInterval: 60_000,
+  });
 
   const triggerAction = (action: "back" | "logout") => {
     if (useConfirmation) {
@@ -127,8 +162,16 @@ export function HeaderBigLogo({
           {hasNotifications && isLoggedIn !== false && (
             <Pressable
               onPress={() => router.push("/(notifications)/notifications")}
+              className="relative"
             >
               <Ionicons name="notifications-outline" size={32} color="white" />
+              {(unreadQuery.data ?? 0) > 0 && (
+                <View className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 items-center justify-center">
+                  <Text className="text-white text-[10px] font-kanitMedium leading-none">
+                    {Math.min(unreadQuery.data ?? 0, 99)}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           )}
 

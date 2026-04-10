@@ -5,8 +5,9 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
+$routes->get('/', 'UserController::index');
 $routes->get('testing/nfc-simulator', 'Home::nfcSimulator');
+$routes->get('notification/manage', 'WebController::manager');
 $routes->group('user', function ($routes) {
     $routes->get('getUsers', 'UserController::getUsers');
     $routes->get('getUser', 'UserController::getUserByIdAndNumber');
@@ -29,6 +30,9 @@ $routes->group('user', function ($routes) {
     $routes->post('getFavoriteLocationByTagUid', 'UserController::getFavoriteLocationByTagUid');
     $routes->post('getFavoriteMenuByCode', 'UserController::getFavoriteMenuByCode');
     $routes->post('getFavoriteMenuByTagUid', 'UserController::getFavoriteMenuByTagUid');
+
+    // Notification routes
+    $routes->post('getNotificationRecipientsByTagUid', 'UserController::getNotificationRecipientsByTagUid');
 });
 
 
@@ -55,4 +59,21 @@ $routes->group('booking', function ($routes) {
     $routes->post('my-bookings', 'BookingController::getMyBookings');
     $routes->post('count', 'BookingController::getBookingCountByTagUid');
     $routes->post('cancel', 'BookingController::cancelBooking');
+});
+
+$routes->group('notifications', function ($routes) {
+    $routes->post('list', 'UserController::list');
+    $routes->patch('mark-read', 'UserController::markRead');
+    $routes->post('mark-read', 'UserController::markRead');
+});
+
+$routes->group('admin/notifications', function ($routes) {
+    $routes->get('/', 'AdminController::index');
+    $routes->get('(:num)', 'AdminController::show/$1');
+    $routes->post('/', 'AdminController::create');
+    $routes->patch('(:num)', 'AdminController::update/$1');
+    $routes->post('(:num)/update', 'AdminController::update/$1');
+    $routes->delete('(:num)', 'AdminController::delete/$1');
+    $routes->post('(:num)/send', 'AdminController::send/$1');
+    $routes->post('send', 'AdminController::send');
 });
