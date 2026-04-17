@@ -3,9 +3,9 @@ import { PrimaryButton } from "@/src/components/ui/Buttons";
 import { NormalInput } from "@/src/components/ui/Inputs";
 import { useRegistration } from "@/src/context/UserRegistrationContext";
 import {
-    checkUserExists,
-    createUser,
-    updateUser,
+  checkUserExists,
+  createUser,
+  updateUser,
 } from "@/src/services/api/user";
 import { saveLastLogin } from "@/src/services/notifications";
 import { getItem, setItem } from "@/src/utils/asyncStorage";
@@ -13,15 +13,15 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TouchableWithoutFeedback,
-    View,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -123,23 +123,37 @@ export default function PersonalDetails() {
 
       // getFormData() is used only for phone_number set earlier
       const registrationData = { ...getFormData(), ...formData };
+      const phoneNumber = registrationData.phone_number;
 
-      const userData = await checkUserExists(registrationData.phone_number);
+      if (!phoneNumber) {
+        setErrors((prev) => ({
+          ...prev,
+          form: "Missing phone number. Please go back and verify your number.",
+        }));
+        return;
+      }
+
+      const userData = await checkUserExists(phoneNumber);
       const isIncomplete = Boolean(userData.is_incomplete);
 
       if (isIncomplete) {
+        if (!userData.tag_uid) {
+          setErrors((prev) => ({
+            ...prev,
+            form: "Unable to complete profile. Please try again.",
+          }));
+          return;
+        }
+
         // User stub already exists — update it with full profile details
-        const updateResult = await updateUser(userData.tag_uid, {
+        await updateUser(userData.tag_uid, {
           name: localFormData.name,
           email: localFormData.email,
           birthday: localFormData.birthday,
           expo_push_token: resolvedPushToken,
         });
-        // Save the server-returned user, not the stale pre-update snapshot
-        await setItem(
-          "userData",
-          JSON.stringify(updateResult.user ?? updateResult),
-        );
+        const freshUser = await checkUserExists(phoneNumber);
+        await setItem("userData", JSON.stringify(freshUser));
         saveLastLogin();
         router.replace("/(tabs)");
       } else {
@@ -148,12 +162,12 @@ export default function PersonalDetails() {
           tag_uid: registrationData.tag_uid || "",
           name: localFormData.name,
           email: localFormData.email,
-          phone_number: registrationData.phone_number || "",
+          phone_number: phoneNumber,
           password: registrationData.password || "",
           birthday: localFormData.birthday,
           expo_push_token: resolvedPushToken,
         });
-        const freshUser = await checkUserExists(registrationData.phone_number);
+        const freshUser = await checkUserExists(phoneNumber);
         await setItem("userData", JSON.stringify(freshUser));
         saveLastLogin();
         router.replace("/(tabs)");

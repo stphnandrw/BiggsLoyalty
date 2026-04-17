@@ -6,6 +6,7 @@ use App\Models\BookingModel;
 use App\Models\BookingSlotModel;
 use App\Models\BtcLoyaltyModel;
 use App\Models\BranchModel;
+use App\Models\ClaimedVoucherModel;
 use App\Models\FavoriteModel;
 use App\Models\MenuModel;
 use App\Models\NotificationModel;
@@ -185,5 +186,14 @@ class Services extends BaseService
         }
 
         return new NotificationQueueModel();
+    }
+
+    public static function claimedVoucherModel($getShared = true): ClaimedVoucherModel
+    {
+        if ($getShared) {
+            return static::getSharedInstance('claimedVoucherModel');
+        }
+
+        return new ClaimedVoucherModel();
     }
 }

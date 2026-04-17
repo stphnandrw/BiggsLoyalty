@@ -4,6 +4,15 @@ namespace App\Controllers;
 
 class BookingController extends BaseController
 {
+	public function getBranches(){
+		$branches = $this->branchModel->findAll();
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Branches fetched successfully',
+			'data' => $branches,
+		]);
+	}
 	public function getBranchPackages()
 	{
 		$data = $this->request->getJSON();
@@ -236,6 +245,34 @@ class BookingController extends BaseController
 		return $this->response->setJSON([
 			'status' => 'success',
 			'message' => 'Booking cancelled successfully',
+		]);
+	}
+
+	public function getAllBookingByBranch()
+	{
+		$data = $this->request->getJSON();
+		$branchId = (int) ($data->branch_id ?? 0);
+
+		if ($branchId <= 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'branch_id is required',
+			]);
+		}
+
+		if (!$this->branchModel->find($branchId)) {
+			return $this->response->setStatusCode(404)->setJSON([
+				'status' => 'error',
+				'message' => 'Branch not found',
+			]);
+		}
+
+		$bookings = $this->bookingModel->getBookingsByBranchId($branchId);
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Bookings fetched successfully',
+			'data' => $bookings,
 		]);
 	}
 }

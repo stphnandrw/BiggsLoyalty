@@ -2,7 +2,7 @@
 import { SearchInput } from "@/src/components/ui/Inputs";
 import type { ClaimedVoucher, VoucherListItem } from "@/src/types";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { RefreshControl, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 type VoucherPageContentProps = {
@@ -14,6 +14,8 @@ type VoucherPageContentProps = {
   onViewVoucher: (voucher: VoucherListItem) => void;
   onToggleClaim: (voucherId: number, isClaimed: boolean) => void;
   scope: "all" | "claimed" | "history";
+  isRefetching?: boolean;
+  onRefresh?: () => void;
 };
 
 function getVoucherCardKey(
@@ -41,6 +43,8 @@ export function VoucherPageContent({
   onViewVoucher,
   onToggleClaim,
   scope,
+  isRefetching = false,
+  onRefresh,
 }: VoucherPageContentProps) {
   const swipeDirection = "right";
 
@@ -52,7 +56,14 @@ export function VoucherPageContent({
         onChangeText={onSearchChange}
         icon={<FontAwesome6 name="magnifying-glass" size={20} color="gray" />}
       />
-      <ScrollView className="w-full flex-1">
+      <ScrollView
+        className="w-full flex-1"
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
+          ) : undefined
+        }
+      >
         <View className="items-center">
           {vouchers.length > 0 ? (
             vouchers.map((voucher, index) => (
@@ -65,7 +76,7 @@ export function VoucherPageContent({
                 image_url={voucher.image_url}
                 isRedeemed={
                   isClaimedVoucher(voucher)
-                    ? Boolean(voucher.claimed_at)
+                    ? Boolean(voucher.redeemed_at)
                     : false
                 }
                 isFavorited={claimedVoucherIds.includes(voucher.voucher_id)}

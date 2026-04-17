@@ -38,6 +38,7 @@ abstract class BaseController extends Controller
     protected $bookingSlotModel;
     protected $packageModel;
     protected $notificationRecipientModel;
+    protected $claimedVoucherModel;
 
     /**
      * @return void
@@ -64,6 +65,7 @@ abstract class BaseController extends Controller
         $this->bookingSlotModel = service('bookingSlotModel');
         $this->packageModel = service('packageModel');
         $this->notificationRecipientModel = service('notificationRecipientModel');
+        $this->claimedVoucherModel = service('claimedVoucherModel');
 
 
 

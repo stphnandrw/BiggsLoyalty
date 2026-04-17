@@ -45,7 +45,7 @@ function BouncingSquare({ color, delay }: { color: string; delay: number }) {
 
   useEffect(() => {
     translateY.value = bounceSequence(delay);
-  }, []);
+  }, [delay, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -64,7 +64,7 @@ export default function LoadingOverlay({ fill = true }: LoadingOverlayProps) {
 
   useEffect(() => {
     rotate.value = wiggleSequence;
-  }, []);
+  }, [rotate]);
 
   // const animatedStyle = useAnimatedStyle(() => ({
   //   transform: [{ rotate: `${rotate.value}deg` }],

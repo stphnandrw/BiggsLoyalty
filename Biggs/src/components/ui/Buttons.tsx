@@ -100,21 +100,21 @@ export function MiniPrimaryButton({
   buttonName,
   route,
   onPress: customOnPress,
+  buttonWidth,
 }: ButtonProps) {
   return (
-    <View>
-      <View className="w-full items-center">
-        <Pressable
-          className="bg-darkBlue py-[2px] px-3 rounded-3xl border-4 border-saffron flex-row items-center"
-          onPress={() => handlePress(route, customOnPress)}
-        >
-          {icon && <View className="mr-2">{icon}</View>}
+    <View className="w-full items-center">
+      <Pressable
+        className="bg-darkBlue py-[2px] px-3 rounded-3xl border-4 border-saffron flex-row items-center justify-center"
+        style={{ width: buttonWidth }}
+        onPress={() => handlePress(route, customOnPress)}
+      >
+        {icon && <View className="mr-2">{icon}</View>}
 
-          <Text className="text-center font-kanitBold text-white">
-            {buttonName}
-          </Text>
-        </Pressable>
-      </View>
+        <Text className="text-center font-kanitBold text-white">
+          {buttonName}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -512,11 +512,13 @@ export function MiniGhostButton({
   buttonName,
   route,
   onPress: customOnPress,
+  buttonWidth,
 }: ButtonProps) {
   return (
     <View className="w-full items-center">
       <Pressable
-        className="bg-transparent py-[2px] px-3 rounded-3xl border-4 border-gray-400"
+        className="bg-transparent py-[2px] px-3 rounded-3xl border-4 border-gray-400 flex-row items-center justify-center"
+        style={{ width: buttonWidth }}
         onPress={() => handlePress(route, customOnPress)}
       >
         <Text className="text-center font-kanitBold text-gray-400">

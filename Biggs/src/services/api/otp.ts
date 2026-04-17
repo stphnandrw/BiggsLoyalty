@@ -1,7 +1,6 @@
-import { parseDirectOrEnvelope } from "@/src/services/api/schemas/common";
 import {
-    GenerateOtpResponseSchema,
-    VerifyOtpResponseSchema,
+  GenerateOtpResponseSchema,
+  VerifyOtpResponseSchema,
 } from "@/src/services/api/schemas/otp";
 import type { GenerateOtpResponse, VerifyOtpResponse } from "@/src/types";
 import { api } from "./api";
@@ -18,11 +17,7 @@ export const generateOTP = async (
       force,
     });
     console.log("Generate OTP API Response:", response.data);
-    return parseDirectOrEnvelope({
-      input: response.data,
-      directSchema: GenerateOtpResponseSchema,
-      endpointName: "generateOTP",
-    });
+    return GenerateOtpResponseSchema.parse(response.data);
   } catch (error) {
     console.error("Generate OTP API Error:", error);
     throw error;
@@ -39,11 +34,7 @@ export const verifyOTP = async (
       otp_code,
     });
     console.log("Verify OTP API Response:", response.data);
-    const parsed = parseDirectOrEnvelope({
-      input: response.data,
-      directSchema: VerifyOtpResponseSchema,
-      endpointName: "verifyOTP",
-    });
+    const parsed = VerifyOtpResponseSchema.parse(response.data);
 
     return VerifyOtpResponseSchema.parse({
       ...parsed,

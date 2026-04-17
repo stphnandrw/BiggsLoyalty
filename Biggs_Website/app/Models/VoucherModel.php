@@ -34,4 +34,32 @@ class VoucherModel extends Model
             ->get()
             ->getResult();
     }
+    
+    public function getClaimedVouchersByTagUId($tagUid)
+    {
+        return $this->db->table('vouchers v')
+            ->select('v.*, c.*')
+            ->join(
+                'claimed_vouchers c',
+                'c.voucher_id = v.voucher_id AND c.tag_uid = ' . $this->db->escape($tagUid),
+                'inner'
+            )
+            ->where('c.redeemed_at IS NULL')
+            ->get()
+            ->getResult();
+    }
+
+    public function getRedeemedVouchersByTagUId($tagUid)
+    {
+        return $this->db->table('vouchers v')
+            ->select('v.*, c.*')
+            ->join(
+                'claimed_vouchers c',
+                'c.voucher_id = v.voucher_id AND c.tag_uid = ' . $this->db->escape($tagUid),
+                'inner'
+            )
+            ->where('c.redeemed_at IS NOT NULL')
+            ->get()
+            ->getResult();
+    }
 }

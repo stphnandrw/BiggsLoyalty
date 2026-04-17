@@ -45,6 +45,7 @@ export function HeaderBigLogo({
   hasHistory,
   isLoggedIn,
   hasLogout,
+  onBackPress,
   onHistoryPress,
   useConfirmation,
   confirmTitle = "Are you sure?",
@@ -94,7 +95,11 @@ export function HeaderBigLogo({
       setConfirmVisible(true);
     } else {
       if (action === "back") {
-        router.back();
+        if (onBackPress) {
+          onBackPress();
+        } else {
+          router.back();
+        }
       } else {
         doLogout();
       }
@@ -103,7 +108,13 @@ export function HeaderBigLogo({
 
   const handleConfirm = () => {
     setConfirmVisible(false);
-    if (pendingAction === "back") router.back();
+    if (pendingAction === "back") {
+      if (onBackPress) {
+        onBackPress();
+      } else {
+        router.back();
+      }
+    }
     if (pendingAction === "logout") doLogout();
     setPendingAction(null);
   };

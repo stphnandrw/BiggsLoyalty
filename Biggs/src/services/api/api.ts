@@ -7,9 +7,11 @@ type ApiErrorPayload = {
   };
 };
 
+export const baseApiUrl = "http://192.168.4.222:8080"; // Office
+// export const baseApiUrl = "http://192.168.0.58:8082"; // Home
+
 export const api = axios.create({
-  baseURL: "http://192.168.4.222:8080", // Office
-  // baseURL: "http://192.168.0.58:8082", // Home
+  baseURL: baseApiUrl,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

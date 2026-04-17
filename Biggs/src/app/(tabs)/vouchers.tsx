@@ -5,9 +5,9 @@ import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { getLoyaltyPoints } from "@/src/services/api/user";
 import {
-    claimVoucher,
-    getUserClaimedVouchers,
-    getVouchersExcludingClaimed,
+  claimVoucher,
+  getAvailableVouchers,
+  getClaimedVouchers,
 } from "@/src/services/api/vouchers";
 import type { ClaimedVoucher, Voucher, VoucherListItem } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
@@ -54,21 +54,34 @@ export default function Vouchers() {
     loadUser();
   }, []);
 
-  const { data: loyaltyData, isLoading: isLoadingLoyalty } = useQuery({
+  const {
+    data: loyaltyData,
+    isLoading: isLoadingLoyalty,
+    refetch: refetchLoyalty,
+  } = useQuery({
     queryKey: ["loyaltyPoints", tagUid],
     queryFn: () => getLoyaltyPoints(tagUid as string),
     enabled: !!tagUid,
   });
 
-  const { data: allVouchers = [], isLoading: isLoadingVouchers } = useQuery({
+  const {
+    data: allVouchers = [],
+    isLoading: isLoadingVouchers,
+    refetch: refetchAllVouchers,
+  } = useQuery({
     queryKey: ["vouchers", tagUid],
-    queryFn: () => getVouchersExcludingClaimed(tagUid as string),
+    queryFn: () => getAvailableVouchers(tagUid as string),
     enabled: !!tagUid,
   });
 
-  const { data: claimedVouchers = [], isLoading: isLoadingClaimed } = useQuery({
+  const {
+    data: claimedVouchers = [],
+    isLoading: isLoadingClaimed,
+    refetch: refetchClaimedVouchers,
+    isRefetching,
+  } = useQuery({
     queryKey: ["claimedVouchers", tagUid],
-    queryFn: () => getUserClaimedVouchers(tagUid as string),
+    queryFn: () => getClaimedVouchers(tagUid as string),
     enabled: !!tagUid,
   });
 
@@ -115,6 +128,14 @@ export default function Vouchers() {
     }).start();
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchLoyalty(),
+      refetchAllVouchers(),
+      refetchClaimedVouchers(),
+    ]);
+  };
+
   const handleTabPress = (index: number) => {
     pagerRef.current?.setPage(index);
     setActiveTab(index);
@@ -128,7 +149,7 @@ export default function Vouchers() {
   };
 
   const isRedeemedVoucher = (voucher: ClaimedVoucher) =>
-    Boolean(voucher.claimed_at);
+    Boolean(voucher.redeemed_at);
 
   const activeClaimedVouchers = claimedVouchers.filter(
     (voucher) => !isRedeemedVoucher(voucher),
@@ -150,7 +171,8 @@ export default function Vouchers() {
   ) => {
     const claimedVoucherId =
       "claimed_voucher_id" in voucher ? voucher.claimed_voucher_id : "";
-    const claimedAt = "claimed_at" in voucher ? (voucher.claimed_at ?? "") : "";
+    const redeemedAt =
+      "redeemed_at" in voucher ? (voucher.redeemed_at ?? "") : "";
 
     router.push({
       pathname: "/(vouchers)/voucher-details",
@@ -162,8 +184,7 @@ export default function Vouchers() {
         description: voucher.description,
         required_points: String(voucher.required_points),
         image_url: voucher.image_url,
-        claimed_at: claimedAt,
-        date_redeemed: "",
+        redeemed_at: redeemedAt,
         redeemable: redeemable ? "true" : "false",
         current_points: String(loyaltyData?.points ?? "0"),
       },
@@ -229,6 +250,8 @@ export default function Vouchers() {
                     claim({ voucher_id, isClaimed: isFavorite });
                   }}
                   scope="all"
+                  isRefetching={isRefetching}
+                  onRefresh={handleRefresh}
                 />
               </View>
 
@@ -242,6 +265,8 @@ export default function Vouchers() {
                   onViewVoucher={(voucher) => openVoucherDetails(voucher, true)}
                   onToggleClaim={() => {}}
                   scope="claimed"
+                  isRefetching={isRefetching}
+                  onRefresh={handleRefresh}
                 />
               </View>
             </PagerView>

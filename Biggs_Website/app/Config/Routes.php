@@ -8,9 +8,9 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'UserController::index');
 $routes->get('testing/nfc-simulator', 'Home::nfcSimulator');
 $routes->get('notification/manage', 'WebController::manager');
+$routes->get('nfc', 'WebController::nfcSimulator');
+
 $routes->group('user', function ($routes) {
-    $routes->get('getUsers', 'UserController::getUsers');
-    $routes->get('getUser', 'UserController::getUserByIdAndNumber');
     $routes->post('check', 'UserController::checkPhoneIfExist');
     $routes->post('checkTagUID', 'UserController::getUserByTagUID');
     $routes->post('create', 'UserController::createUser');
@@ -35,24 +35,31 @@ $routes->group('user', function ($routes) {
     $routes->post('getNotificationRecipientsByTagUid', 'UserController::getNotificationRecipientsByTagUid');
     $routes->post('markNotificationAsRead', 'UserController::markNotificationAsRead');
     $routes->post('markAllNotificationsAsRead', 'UserController::markAllNotificationsAsRead');
-    
-});
 
+    // Voucher routes
+    $routes->post('getAvailableVouchers', 'VoucherController::getVouchersExcludingClaimed');
+    $routes->post('getClaimedVouchers', 'VoucherController::getClaimedVouchersByTagUId');
+    $routes->post('getRedeemedVouchers', 'VoucherController::getRedeemedVouchers');
 
-$routes->group('claimed-vouchers', function ($routes) {
-    $routes->post('claim', 'FavoriteController::claimVoucher');
-    $routes->post('redeem', 'FavoriteController::redeemVoucher');
-    $routes->post('vouchers', 'FavoriteController::getAllClaimedVouchersByTagUid');
-});
+    $routes->post('claimVoucher', 'VoucherController::claimVoucher'); // Create a row on claimed_vouchers with active status
+    $routes->post('startRedeemVoucher', 'VoucherController::startRedeemVoucher'); // Set claimed voucher status to pending, indicating the user has started the redemption process
+    $routes->post("checkOnProcessVoucher", "VoucherController::checkOnProcessVoucher"); // Check if there's a pending redemption voucher for the user (to handle cases where the user might have closed the app before finalizing redemption)
+    $routes->post('endRedeemVoucher', 'VoucherController::endRedeemVoucher'); // Finalize voucher redemption by checking points and updating status to redeemed if successful
 
-$routes->group('vouchers', function ($routes) {
-    $routes->get('/', 'VoucherController::getAllVouchers');
-    $routes->post('exclude-claimed', 'VoucherController::getVouchersExcludingClaimed');
+    $routes->post('cancelVoucherRedemption', 'VoucherController::cancelVoucherRedemption'); // Cancel a pending voucher redemption
+
+    $routes->post('checkSelectedVoucher', 'VoucherController::checkSelectedVoucher'); // Check if the selected voucher is still on pending redemption (to prevent claiming multiple vouchers at the same time)
 });
 
 $routes->group('menu', function ($routes) {
     $routes->get('/', 'MenuController::getAllMenus');
     $routes->get('categories', 'MenuController::getMenuCategories');
+});
+
+$routes->group('branches', function ($routes) {
+    $routes->get('/', 'BookingController::getBranches');
+    $routes->get('(:num)', 'BranchController::getBranchById/$1');
+    $routes->post('booking', 'BookingController::getAllBookingByBranch');
 });
 
 $routes->group('booking', function ($routes) {

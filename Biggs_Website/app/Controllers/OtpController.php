@@ -64,7 +64,9 @@ class OtpController extends BaseController
         return $this->response->setJSON([
             'status' => 'success',
             'message' => $force ? 'OTP regenerated' : 'OTP generated',
-            'data' => []
+            'data' => [
+                'otp_code' => $otp, // In production, you would send this via SMS instead of returning it in the response
+            ]
         ]);
     }
 

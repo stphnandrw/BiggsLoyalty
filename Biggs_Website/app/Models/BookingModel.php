@@ -57,4 +57,16 @@ class BookingModel extends Model
             ->whereIn('status', ['pending'])
             ->countAllResults();
     }
+
+    public function getBookingsByBranchId($branchId)
+    {
+        return $this->db->table('bookings b')
+            ->select('b.*, b.booking_id AS id, s.branch_id, s.slot_date, s.time_start, s.time_end, p.package_name, p.pax_size, p.price as price_per_head')
+            ->join('booking_slots s', 's.slot_id = b.slot_id', 'left')
+            ->join('packages p', 'p.package_id = b.package_id', 'left')
+            ->where('s.branch_id', $branchId)
+            ->orderBy('b.created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
 }

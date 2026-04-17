@@ -2,13 +2,13 @@
 import { AuthRequiredBottomSheet } from "@/src/components/ui/Modal";
 import { isUserAuthenticated } from "@/src/utils/asyncStorage";
 import {
-    getFavoriteBranchSelectionMode,
-    getFavoriteMenuItemSelectionMode,
+  getFavoriteBranchSelectionMode,
+  getFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Pressable, View } from "react-native";
+import { Animated, Dimensions, Pressable, Text, View } from "react-native";
 
 const { width } = Dimensions.get("window");
 const TAB_COUNT = 5;
@@ -17,13 +17,28 @@ const LINE_WIDTH = TAB_WIDTH * 0.9; // Width of the indicator line
 
 const iconMap: Record<
   string,
-  { focused: string; unfocused: string; size: number }
+  { focused: string; unfocused: string; size: number; name?: string }
 > = {
-  index: { focused: "home", unfocused: "home-outline", size: 24 },
-  "store-locator": { focused: "map", unfocused: "map-outline", size: 24 },
-  more: { focused: "menu", unfocused: "menu-outline", size: 36 },
-  menu: { focused: "fast-food", unfocused: "fast-food-outline", size: 28 },
-  vouchers: { focused: "pricetags", unfocused: "pricetags-outline", size: 22 },
+  index: { focused: "home", unfocused: "home-outline", size: 24, name: "Home" },
+  "store-locator": {
+    focused: "map",
+    unfocused: "map-outline",
+    size: 24,
+    name: "Stores",
+  },
+  more: { focused: "menu", unfocused: "menu-outline", size: 36, name: "More" },
+  menu: {
+    focused: "fast-food",
+    unfocused: "fast-food-outline",
+    size: 28,
+    name: "Menu",
+  },
+  vouchers: {
+    focused: "pricetags",
+    unfocused: "pricetags-outline",
+    size: 22,
+    name: "Vouchers",
+  },
 };
 
 const PROTECTED_TABS = new Set(["vouchers", "profile"]);
@@ -116,7 +131,7 @@ export default function CustomTabBar({
 
   return (
     <>
-      <View className="flex-row bg-[#f0f0ec] border-t border-[#e0e0e0] h-20 items-center">
+      <View className="flex-row bg-[#f0f0ec] border-t border-[#e0e0e0] h-[86px] items-center">
         {/* Animated Indicator Line */}
         <Animated.View
           className={"absolute bg-lightBlue h-1 rounded-lg"}
@@ -166,11 +181,8 @@ export default function CustomTabBar({
               key={route.key}
               onPress={onPress}
               disabled={tabsDisabled}
+              className="flex-1 items-center justify-center h-full"
               style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
                 opacity: tabsDisabled ? 0.5 : 1,
               }}
             >
@@ -183,11 +195,18 @@ export default function CustomTabBar({
                   opacity: opacities[index],
                 }}
               >
-                <Ionicons
-                  name={iconName}
-                  size={iconSize} // Use the custom size here
-                  color={isFocused ? "#3db5e7" : "#888"}
-                />
+                <View className="items-center justify-between gap-1">
+                  <Ionicons
+                    name={iconName}
+                    size={iconSize} // Use the custom size here
+                    color={isFocused ? "#3db5e7" : "#888"}
+                  />
+                  <Text
+                    className={`font-kanitBold ${isFocused ? "text-lightBlue" : "text-gray-500"}`}
+                  >
+                    {iconConfig?.name}
+                  </Text>
+                </View>
               </Animated.View>
             </Pressable>
           );

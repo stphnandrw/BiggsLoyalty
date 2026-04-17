@@ -27,6 +27,12 @@ export default function Profile() {
   const [favoriteMenuItem, setFavoriteMenuItem] = useState<any>(null);
   const [pendingBookingCount, setPendingBookingCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Error states for each data category
+  const [branchLoadError, setBranchLoadError] = useState(false);
+  const [menuLoadError, setMenuLoadError] = useState(false);
+  const [bookingCountError, setBookingCountError] = useState(false);
+
   const router = useRouter();
 
   const parseBranchAddress = (description?: string) => {
@@ -53,6 +59,7 @@ export default function Profile() {
         setUser(parsedUser);
 
         if (parsedUser.tag_uid) {
+          // Load favorite branch
           try {
             const branch_code = await getFavoriteLocationByTagUid(
               parsedUser.tag_uid,
@@ -61,48 +68,66 @@ export default function Profile() {
             if (branch_code) {
               const branch = await getFavoriteBranchByCode(branch_code);
               setFavoriteBranch(branch);
+              setBranchLoadError(false);
             }
-          } catch {
+          } catch (error) {
+            console.error("Failed to fetch favorite branch:", error);
+            setBranchLoadError(true);
             setFavoriteBranch(null);
           }
 
+          // Load favorite menu
           try {
             const menu_code = await getFavoriteMenuByTagUid(parsedUser.tag_uid);
 
             if (menu_code) {
               const menu = await getFavoriteMenuByCode(menu_code);
               setFavoriteMenuItem(menu);
+              setMenuLoadError(false);
             } else {
               setFavoriteMenuItem(null);
+              setMenuLoadError(false);
             }
-          } catch {
+          } catch (error) {
+            console.error("Failed to fetch favorite menu:", error);
+            setMenuLoadError(true);
             setFavoriteMenuItem(null);
           }
 
+          // Load booking count
           try {
             const bookingCount = await getBookingCountByTagUid(
               parsedUser.tag_uid,
             );
 
             setPendingBookingCount(bookingCount);
+            setBookingCountError(false);
             console.log("Booking count for user:", bookingCount);
           } catch (error) {
             console.error("Failed to fetch booking count:", error);
+            setBookingCountError(true);
             setPendingBookingCount(0);
           }
         } else {
           setFavoriteBranch(null);
           setFavoriteMenuItem(null);
+          setBranchLoadError(false);
+          setMenuLoadError(false);
         }
       } else {
         setUser(null);
         setFavoriteBranch(null);
         setFavoriteMenuItem(null);
+        setBranchLoadError(false);
+        setMenuLoadError(false);
       }
-    } catch {
+    } catch (error) {
+      console.error("Failed to load profile data:", error);
       setUser(null);
       setFavoriteBranch(null);
       setFavoriteMenuItem(null);
+      setBranchLoadError(false);
+      setMenuLoadError(false);
     } finally {
       setIsLoading(false);
     }
@@ -137,6 +162,62 @@ export default function Profile() {
       router.push("/(tabs)/menu?mode=favorite");
     } catch (error) {
       console.error("Failed to enable favorite menu selection mode:", error);
+    }
+  };
+
+  const handleRetryBranchLoad = async () => {
+    try {
+      const userData = await getItem("userData");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        const branch_code = await getFavoriteLocationByTagUid(
+          parsedUser.tag_uid,
+        );
+        if (branch_code) {
+          const branch = await getFavoriteBranchByCode(branch_code);
+          setFavoriteBranch(branch);
+          setBranchLoadError(false);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to retry branch load:", error);
+      setBranchLoadError(true);
+    }
+  };
+
+  const handleRetryMenuLoad = async () => {
+    try {
+      const userData = await getItem("userData");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        const menu_code = await getFavoriteMenuByTagUid(parsedUser.tag_uid);
+        if (menu_code) {
+          const menu = await getFavoriteMenuByCode(menu_code);
+          setFavoriteMenuItem(menu);
+          setMenuLoadError(false);
+        } else {
+          setFavoriteMenuItem(null);
+          setMenuLoadError(false);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to retry menu load:", error);
+      setMenuLoadError(true);
+    }
+  };
+
+  const handleRetryBookingCountLoad = async () => {
+    try {
+      const userData = await getItem("userData");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        const bookingCount = await getBookingCountByTagUid(parsedUser.tag_uid);
+        setPendingBookingCount(bookingCount);
+        setBookingCountError(false);
+      }
+    } catch (error) {
+      console.error("Failed to retry booking count load:", error);
+      setBookingCountError(true);
     }
   };
 
@@ -213,6 +294,24 @@ export default function Profile() {
                 <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 pt-3 pb-1">
                   Favorites
                 </Text>
+
+                {/* Branch Error Indicator */}
+                {branchLoadError && (
+                  <View className="bg-red-50 border-l-4 border-red-500 mx-4 mb-2 p-2 rounded">
+                    <Text className="text-red-600 text-xs font-kanitMedium">
+                      Failed to load favorite branch
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleRetryBranchLoad}
+                      className="mt-1"
+                    >
+                      <Text className="text-red-500 text-xs font-kanitMedium">
+                        Retry
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <ItemWithButton
                   buttonName="Change"
                   icon={<Feather name="map-pin" size={16} color="#1a8fc4" />}
@@ -221,6 +320,24 @@ export default function Profile() {
                   onPress={handleChangeFavoriteLocation}
                 />
                 <View className="h-[0.5px] bg-gray-100 mx-4" />
+
+                {/* Menu Error Indicator */}
+                {menuLoadError && (
+                  <View className="bg-red-50 border-l-4 border-red-500 mx-4 my-2 p-2 rounded">
+                    <Text className="text-red-600 text-xs font-kanitMedium">
+                      Failed to load favorite menu
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleRetryMenuLoad}
+                      className="mt-1"
+                    >
+                      <Text className="text-red-500 text-xs font-kanitMedium">
+                        Retry
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <ItemWithButton
                   buttonName="Change"
                   icon={<Feather name="heart" size={16} color="#1a8fc4" />}
@@ -232,6 +349,23 @@ export default function Profile() {
 
               {/* Group 3: Settings */}
               <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {/* Booking Count Error Indicator */}
+                {bookingCountError && (
+                  <View className="bg-red-50 border-b border-red-200 px-4 py-2">
+                    <Text className="text-red-600 text-xs font-kanitMedium">
+                      ⚠ Unable to load scheduled events count
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleRetryBookingCountLoad}
+                      className="mt-1"
+                    >
+                      <Text className="text-red-500 text-xs font-kanitMedium">
+                        Retry
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 <ProfileMenuItem
                   icon="receipt-outline"
                   label="Scheduled Events"
@@ -349,11 +483,13 @@ function ItemWithButton({
           </Text>
         )}
       </View>
-      <MiniPrimaryButton
-        icon={icon2}
-        buttonName={buttonName}
-        onPress={() => onPress()}
-      />
+      <View>
+        <MiniPrimaryButton
+          icon={icon2}
+          buttonName={buttonName}
+          onPress={() => onPress()}
+        />
+      </View>
     </View>
   );
 }

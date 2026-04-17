@@ -21,6 +21,8 @@ export const VoucherSchema = z
     voucher_name: StringSchema,
     description: StringSchema,
     required_points: NumberLikeSchema,
+    beginning_stock: NumberLikeSchema,
+    claimed_count: NumberLikeSchema,
     image_url: StringSchema,
     start_date: NullableStringSchema,
     end_date: NullableStringSchema,
@@ -31,7 +33,7 @@ export const VoucherSchema = z
 export const ClaimedVoucherSchema = VoucherSchema.extend({
   claimed_voucher_id: NumberLikeSchema,
   tag_uid: StringSchema,
-  claimed_at: NullableStringSchema,
+  redeemed_at: NullableStringSchema,
 });
 
 export const VoucherListSchema = z.array(VoucherSchema);

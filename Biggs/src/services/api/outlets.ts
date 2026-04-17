@@ -5,9 +5,7 @@ import type { Outlet } from "@/src/types";
 
 export const getOutlets = async (): Promise<Outlet[]> => {
   try {
-    const response = await api.get(
-      "https://biggs.ph/biggs_website/api/outlets",
-    );
+    const response = await api.get("/branches");
     return parseDirectOrEnvelope({
       input: response.data,
       directSchema: OutletListSchema,

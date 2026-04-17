@@ -1,28 +1,20 @@
 import { api } from "@/src/services/api/api";
 import { parseDirectOrEnvelope } from "@/src/services/api/schemas/common";
+import { MenuItemSchema } from "@/src/services/api/schemas/menu";
 import { LoyaltyPointsSchema } from "@/src/services/api/schemas/user";
 import {
-  CheckTagUidResponseSchema,
-  CheckUserExistsResponseSchema,
-  FavoriteCodeResponseSchema,
-  FavoriteEntitySchema,
-  UserMutationResponseSchema,
+    CheckTagUidResponseSchema,
+    CheckUserExistsResponseSchema,
+    FavoriteCodeResponseSchema,
+    FavoriteEntitySchema,
+    UserMutationResponseSchema,
 } from "@/src/services/api/schemas/user-responses";
 import type {
-  CheckTagUidResponse,
-  CheckUserExistsResponse,
-  LoyaltyPoints,
-  UserMutationResponse,
+    CheckTagUidResponse,
+    CheckUserExistsResponse,
+    LoyaltyPoints,
+    UserMutationResponse,
 } from "@/src/types";
-
-export const getUsers = async () => {
-  try {
-    const response = await api.get("/user/getUsers");
-    console.log("Users API Response:", response.data);
-  } catch (error) {
-    console.error("Users API Error:", error);
-  }
-};
 
 export const checkUserByTagUid = async (
   tag_uid: string,
@@ -231,7 +223,7 @@ export const getFavoriteMenuByCode = async (menu_code: string) => {
     console.log("Get Favorite Menu By Code API Response:", response.data);
     return parseDirectOrEnvelope({
       input: response.data,
-      directSchema: FavoriteEntitySchema,
+      directSchema: MenuItemSchema,
       endpointName: "getFavoriteMenuByCode",
     });
   } catch (error) {

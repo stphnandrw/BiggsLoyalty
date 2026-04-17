@@ -39,31 +39,17 @@ const normalizeVoucherMutationResponse = (
   };
 };
 
-export const getAllVouchers = async (): Promise<Voucher[]> => {
-  try {
-    const response = await api.get("/vouchers");
-    return parseDirectOrEnvelope({
-      input: response.data,
-      directSchema: VoucherListSchema,
-      endpointName: "getAllVouchers",
-    });
-  } catch (error) {
-    console.error("Get All Vouchers API Error:", error);
-    throw error;
-  }
-};
-
-export const getUserClaimedVouchers = async (
+export const getClaimedVouchers = async (
   tag_uid: string,
 ): Promise<ClaimedVoucher[]> => {
   try {
-    const response = await api.post(`/claimed-vouchers/vouchers`, {
+    const response = await api.post(`/user/getClaimedVouchers`, {
       tag_uid,
     });
     return parseDirectOrEnvelope({
       input: response.data,
       directSchema: ClaimedVoucherListSchema,
-      endpointName: "getUserClaimedVouchers",
+      endpointName: "getClaimedVouchers",
     });
   } catch (error) {
     console.error("Get User Claimed Vouchers API Error:", error);
@@ -71,20 +57,38 @@ export const getUserClaimedVouchers = async (
   }
 };
 
-export const getVouchersExcludingClaimed = async (
+export const getAvailableVouchers = async (
   tag_uid: string,
 ): Promise<Voucher[]> => {
   try {
-    const response = await api.post(`/vouchers/exclude-claimed`, {
+    const response = await api.post(`/user/getAvailableVouchers`, {
       tag_uid,
     });
     return parseDirectOrEnvelope({
       input: response.data,
       directSchema: VoucherListSchema,
-      endpointName: "getVouchersExcludingClaimed",
+      endpointName: "getAvailableVouchers",
     });
   } catch (error) {
-    console.error("Get Vouchers Excluding Claimed API Error:", error);
+    console.error("Get Available Vouchers API Error:", error);
+    throw error;
+  }
+};
+
+export const getRedeemedVouchers = async (
+  tag_uid: string,
+): Promise<ClaimedVoucher[]> => {
+  try {
+    const response = await api.post(`/user/getRedeemedVouchers`, {
+      tag_uid,
+    });
+    return parseDirectOrEnvelope({
+      input: response.data,
+      directSchema: ClaimedVoucherListSchema,
+      endpointName: "getRedeemedVouchers",
+    });
+  } catch (error) {
+    console.error("Get Redeemed Vouchers API Error:", error);
     throw error;
   }
 };
@@ -94,7 +98,7 @@ export const claimVoucher = async (
   voucher_id: number,
 ): Promise<ApiMutationResponse<VoucherMutationPayload>> => {
   try {
-    const response = await api.post(`/claimed-vouchers/claim`, {
+    const response = await api.post(`/user/claimVoucher`, {
       tag_uid,
       voucher_id,
     });
@@ -110,13 +114,54 @@ export const redeemVoucher = async (
   claimed_voucher_id: number,
 ): Promise<ApiMutationResponse<VoucherMutationPayload>> => {
   try {
-    const response = await api.post(`/claimed-vouchers/redeem`, {
+    console.log(
+      "Redeeming voucher with tag_uid:",
+      tag_uid,
+      "claimed_voucher_id:",
+      claimed_voucher_id,
+    );
+    const response = await api.post(`/user/startRedeemVoucher`, {
       tag_uid,
       claimed_voucher_id,
     });
     return normalizeVoucherMutationResponse(response.data);
   } catch (error) {
     console.error("Redeem Voucher API Error:", error);
+    throw error;
+  }
+};
+
+export const cancelVoucherRedemption = async (
+  tag_uid: string,
+  claimed_voucher_id: number,
+): Promise<ApiMutationResponse<VoucherMutationPayload>> => {
+  try {
+    const response = await api.post(`/user/cancelVoucherRedemption`, {
+      tag_uid,
+      claimed_voucher_id,
+    });
+    return normalizeVoucherMutationResponse(response.data);
+  } catch (error) {
+    console.error("Cancel Voucher Redemption API Error:", error);
+    throw error;
+  }
+};
+
+export const checkOnProcessVoucher = async (
+  tag_uid: string,
+  claimed_voucher_id: number,
+): Promise<VoucherMutationPayload | null> => {
+  try {
+    const response = await api.post(`/user/checkSelectedVoucher`, {
+      tag_uid,
+      claimed_voucher_id,
+    });
+    const parsed = VoucherMutationResponseSchema.parse(response.data);
+    console.log("Check On Process Voucher API Response:", parsed);
+
+    return parsed.data ?? null;
+  } catch (error) {
+    console.error("Check On Process Voucher API Error:", error);
     throw error;
   }
 };

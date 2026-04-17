@@ -27,5 +27,18 @@ class BtcLoyaltyModel extends Model
         return $this->select('points')->where('tag_uid', $tag_uid)->first();
     }
 
+    public function deductPoints($tag_uid, $pointsToDeduct){
+
+        $pointsToDeduct = (int) $pointsToDeduct;
+
+        if ($pointsToDeduct <= 0) {
+            return false;
+        }
+
+        return $this->where('tag_uid', $tag_uid)
+            ->where('points >=', $pointsToDeduct)
+            ->set('points', 'points - ' . $pointsToDeduct, false)
+            ->update();
+    }
     
 }

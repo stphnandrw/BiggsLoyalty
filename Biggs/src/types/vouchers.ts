@@ -3,6 +3,8 @@ export type Voucher = {
   voucher_name: string;
   description: string;
   required_points: number;
+  beginning_stock: number;
+  claimed_count: number;
   image_url: string;
   start_date: string | null;
   end_date: string | null;
@@ -12,7 +14,7 @@ export type Voucher = {
 export type ClaimedVoucher = Voucher & {
   claimed_voucher_id: number;
   tag_uid: string;
-  claimed_at: string | null;
+  redeemed_at: string | null;
 };
 
 export type VoucherListItem = Voucher | ClaimedVoucher;

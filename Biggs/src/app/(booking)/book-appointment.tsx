@@ -3,11 +3,11 @@ import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { NormalInput } from "@/src/components/ui/Inputs";
 import { handleApiError } from "@/src/services/api/api";
 import {
-    BookingPackage,
-    BookingSlot,
-    createBooking,
-    getAvailableBookingSlots,
-    getBranchPackages,
+  BookingPackage,
+  BookingSlot,
+  createBooking,
+  getAvailableBookingSlots,
+  getBranchPackages,
 } from "@/src/services/api/bookings";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -137,9 +137,6 @@ export default function BookAppointment() {
       <View className="w-full h-full bg-white">
         <HeaderBigLogo hasBackButton={true} hasNotifications={false} />
         <View className="w-full h-auto items-center justify-center mt-10 px-6">
-          <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
-            Book Appointment
-          </Text>
           <Text className="text-gray-600 text-base mt-2 text-center font-kanit">
             {branchTitle}
           </Text>

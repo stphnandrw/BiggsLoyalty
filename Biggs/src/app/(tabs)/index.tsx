@@ -2,35 +2,39 @@
 import { PrimaryButton } from "@/src/components/ui/Buttons";
 import AppCarousel from "@/src/components/ui/Carousel";
 import { HorizontalLine } from "@/src/components/ui/Lines";
+import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import {
-    AuthRequiredBottomSheet,
-    VoucherModal,
+  AuthRequiredBottomSheet,
+  VoucherModal,
 } from "@/src/components/ui/Modal";
 import { HeadingText } from "@/src/components/ui/Texts";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
+import { baseApiUrl } from "@/src/services/api/api";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Dimensions, ScrollView, Text, View } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width: screenWidth } = Dimensions.get("window");
-const CAROUSEL_HEIGHT = screenWidth * (4 / 6); // 16:9 aspect ratio
 
 export default function Home() {
   const { isLoggedIn } = useAuthStatus();
   const [showAuthSheet, setShowAuthSheet] = useState(false);
   const [showVoucher, setShowVoucher] = useState(true);
+  const [isLandingImageLoading, setIsLandingImageLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate fetch - you can add actual data refetching here if needed
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
 
   const handleVoucherItemPress = (item: any) => {
     console.log("Voucher item pressed!", item);
     // navigate or open details here
   };
-
-  useEffect(() => {
-    // getUsers();
-  }, []);
 
   const carouselData = [
     {
@@ -105,8 +109,6 @@ export default function Home() {
     },
   ];
 
-  const progress = useSharedValue<number>(0);
-
   const handleOpenEventDetails = (item: any) => {
     // Implement navigation to event details screen or open a modal with event details
     console.log("Event item pressed!", item);
@@ -127,13 +129,29 @@ export default function Home() {
     >
       <View className="flex-1 w-full bg-dirtyWhite">
         <HeaderBigLogo hasNotifications isLoggedIn={isLoggedIn} />
-        <ScrollView className="flex-1 w-full">
-          <View className="w-full">
+        <ScrollView
+          className="flex-1 w-full"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+            />
+          }
+        >
+          <View className="w-full relative">
             <Image
-              source={require("../../../assets/images/landing_page.gif")}
+              source={{ uri: `${baseApiUrl}/img/landing_page.gif` }}
               style={{ width: "100%", aspectRatio: 16 / 9 }}
               contentFit="cover"
+              onLoadStart={() => setIsLandingImageLoading(true)}
+              onLoadEnd={() => setIsLandingImageLoading(false)}
+              onError={() => setIsLandingImageLoading(false)}
             />
+            {isLandingImageLoading && (
+              <View className="absolute inset-0">
+                <LoadingOverlay />
+              </View>
+            )}
           </View>
 
           <View className="w-full h-auto items-center bg-dirtyWhite px-4 pb-2 pt-2">

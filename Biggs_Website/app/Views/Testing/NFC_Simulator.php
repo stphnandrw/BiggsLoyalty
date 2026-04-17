@@ -1,233 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFC Simulator</title>
-    <style>
-        :root {
-            color-scheme: light;
-            --bg: #f6f7fb;
-            --panel: #ffffff;
-            --text: #171b2e;
-            --muted: #5b647f;
-            --border: #d8deef;
-            --primary: #1748d8;
-            --primary-hover: #1238aa;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFC Simulator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              950: '#050d1f',
+              900: '#0a1628',
+              800: '#0f2040',
+              700: '#162b58',
+            },
+            blue: {
+              neon: '#3d8eff',
+              soft: '#a8c8ff',
+            },
+          },
+          keyframes: {
+            pulse_ring: {
+              '0%, 100%': {
+                opacity: '0.6',
+                transform: 'scale(1)'
+              },
+              '50%': {
+                opacity: '0.2',
+                transform: 'scale(1.6)'
+              },
+            },
+            scan_line: {
+              '0%': {
+                transform: 'translateY(-100%)'
+              },
+              '100%': {
+                transform: 'translateY(100%)'
+              },
+            },
+            fade_in: {
+              from: {
+                opacity: '0',
+                transform: 'translateY(6px)'
+              },
+              to: {
+                opacity: '1',
+                transform: 'translateY(0)'
+              },
+            },
+          },
+          animation: {
+            pulse_ring: 'pulse_ring 1.8s ease-in-out infinite',
+            scan_line: 'scan_line 1.6s linear infinite',
+            fade_in: 'fade_in 0.35s ease forwards',
+          },
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    .nfc-chip {
+      position: relative;
+      width: 56px;
+      height: 56px;
+    }
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at top right, #e9eeff 0%, var(--bg) 45%);
-            color: var(--text);
-            padding: 24px;
-        }
+    .nfc-chip::before,
+    .nfc-chip::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid #3d8eff;
+      animation: pulse_ring 1.8s ease-in-out infinite;
+    }
 
-        .container {
-            max-width: 920px;
-            margin: 0 auto;
-            display: grid;
-            gap: 16px;
-        }
+    .nfc-chip::after {
+      animation-delay: 0.6s;
+    }
 
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 8px 20px rgba(18, 25, 53, 0.06);
-        }
+    .scan-overlay {
+      position: relative;
+      overflow: hidden;
+    }
 
-        h1 {
-            margin: 0;
-            font-size: 26px;
-        }
+    .scan-overlay.scanning::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3d8eff, transparent);
+      animation: scan_line 1.6s linear infinite;
+    }
 
-        h2 {
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-size: 19px;
-        }
+    pre code.hljs {
+      border-radius: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+    }
 
-        p {
-            margin-top: 0;
-            color: var(--muted);
-        }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
 
-        .row {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            margin-bottom: 10px;
-        }
+    .fade-in {
+      animation: fade_in 0.35s ease forwards;
+    }
 
-        label {
-            display: block;
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 4px;
-        }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
 
-        input {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 9px 10px;
-            font-size: 14px;
-        }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
-        button {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 9px;
-            padding: 10px 16px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s ease;
-        }
-
-        button:hover {
-            background: var(--primary-hover);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        pre {
-            margin: 12px 0 0;
-            background: #0f1732;
-            color: #e7ebff;
-            border-radius: 10px;
-            padding: 12px;
-            overflow: auto;
-            min-height: 60px;
-            font-size: 13px;
-        }
-
-        .status {
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .hint {
-            margin-top: 8px;
-            font-size: 12px;
-            color: var(--muted);
-        }
-    </style>
+    ::-webkit-scrollbar-thumb {
+      background: #1d2d50;
+      border-radius: 3px;
+    }
+  </style>
 </head>
-<body>
-    <main class="container">
-        <section class="card">
-            <h1>NFC Simulator</h1>
-            <p>Use this page to simulate tap flow from browser without physical NFC hardware.</p>
-        </section>
 
-        <section class="card">
-            <h2>Enter Tag ID</h2>
-            <form id="scan-form">
-                <div class="row">
-                    <div>
-                        <label for="scan_tag_uid">Tag UID</label>
-                        <input type="text" id="scan_tag_uid" name="scan_tag_uid" required>
-                    </div>
-                </div>
-                <button type="submit" id="scan-btn">Check Redemption Status</button>
-            </form>
-            <div class="hint">This first validates the tag, then checks whether it has vouchers currently pending redemption.</div>
-            <div class="status" id="scan-status"></div>
-            <pre id="scan-output">No lookup request sent yet.</pre>
-        </section>
-    </main>
+<body class="min-h-screen bg-navy-950 text-white p-4 sm:p-8">
+
+  <!-- Background grid -->
+  <div class="fixed inset-0 pointer-events-none"
+    style="background-image: linear-gradient(rgba(61,142,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(61,142,255,0.04) 1px, transparent 1px); background-size: 40px 40px;"></div>
+  <!-- Glow blob -->
+  <div class="fixed top-0 right-0 w-96 h-96 pointer-events-none rounded-full"
+    style="background: radial-gradient(circle, rgba(61,142,255,0.12) 0%, transparent 70%); transform: translate(30%, -30%);"></div>
+
+  <div class="relative max-w-2xl mx-auto flex flex-col gap-5">
+
+    <!-- Header -->
+    <div class="flex items-center gap-4 pt-2 pb-1 fade-in">
+      <!-- NFC Icon -->
+      <div class="nfc-chip flex items-center justify-center">
+        <div class="w-9 h-9 rounded-full bg-navy-800 border border-blue-neon/40 flex items-center justify-center z-10">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3d8eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12V4H4v16h8" />
+            <path d="M16 19h6" />
+            <path d="M19 16v6" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-white">NFC Simulator</h1>
+        <p class="text-sm text-blue-soft/60 font-mono mt-0.5">Tap-flow simulation without physical hardware</p>
+      </div>
+    </div>
+
+    <!-- Tag Input Card -->
+    <div class="rounded-2xl bg-navy-900 border border-white/[0.07] p-6 shadow-xl fade-in scan-overlay" id="scan-card" style="animation-delay:0.08s">
+      <div class="flex items-center gap-2 mb-5">
+        <span class="status-dot bg-blue-neon animate-pulse"></span>
+        <h2 class="text-base font-semibold tracking-wide uppercase text-blue-soft/80 text-xs font-mono">Tag Lookup</h2>
+      </div>
+
+      <div class="mb-4">
+        <label for="scan_tag_uid" class="block text-xs font-mono text-blue-soft/50 mb-2 tracking-widest uppercase">Tag UID</label>
+        <div class="flex gap-3">
+          <input
+            type="text"
+            id="scan_tag_uid"
+            value="04A6AD40C22A81"
+            class="flex-1 bg-navy-800 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-white/20 focus:outline-none focus:border-blue-neon/60 focus:ring-1 focus:ring-blue-neon/30 transition"
+            placeholder="e.g. 04A6AD40C22A81" />
+          <button
+            id="scan-btn"
+            class="flex items-center gap-2 bg-blue-neon hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-3 rounded-xl transition-all duration-200 whitespace-nowrap shadow-lg shadow-blue-neon/20">
+            <svg id="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <span id="btn-label">Check Status</span>
+          </button>
+        </div>
+        <p class="text-xs text-white/30 mt-2 font-mono">Validates the tag UID, then checks pending redemption vouchers.</p>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="status-bar" class="hidden items-center gap-2 text-sm font-medium mt-4 py-2.5 px-4 rounded-xl border fade-in">
+        <span id="status-dot-inner" class="status-dot"></span>
+        <span id="status-text"></span>
+        <span id="status-code" class="ml-auto font-mono text-xs opacity-60"></span>
+      </div>
+    </div>
+
+    <!-- Output Card -->
+    <div class="rounded-2xl bg-navy-900 border border-white/[0.07] p-6 shadow-xl fade-in" style="animation-delay:0.16s">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="status-dot bg-white/20"></span>
+          <h2 class="text-xs font-mono font-semibold tracking-widest uppercase text-white/40">Response</h2>
+        </div>
+        <button id="copy-btn" class="hidden text-xs font-mono text-blue-neon/70 hover:text-blue-neon transition px-3 py-1.5 rounded-lg border border-blue-neon/20 hover:border-blue-neon/50">
+          Copy JSON
+        </button>
+      </div>
+      <pre id="scan-output" class="rounded-xl text-sm min-h-[120px] max-h-96 overflow-auto"><code class="language-json hljs" style="background:#0a1628;">// No request sent yet.</code></pre>
+    </div>
+
+  </div>
+
+  <script>
+    const $scanBtn = $('#scan-btn');
+    const $btnLabel = $('#btn-label');
+    const $btnIcon = $('#btn-icon');
+    const $tagUid = $('#scan_tag_uid');
+    const $statusBar = $('#status-bar');
+    const $statusText = $('#status-text');
+    const $statusCode = $('#status-code');
+    const $statusDot = $('#status-dot-inner');
+    const $output = $('#scan-output');
+    const $copyBtn = $('#copy-btn');
+    const $scanCard = $('#scan-card');
+
+    let lastJson = null;
+
+    function setStatus(ok, label, code) {
+      $statusBar.removeClass('hidden').addClass('flex');
+      $statusText.text(label);
+      $statusCode.text('HTTP ' + code);
+
+      if (ok) {
+        $statusBar.attr('class', 'flex items-center gap-2 text-sm font-medium mt-4 py-2.5 px-4 rounded-xl border border-green-500/30 bg-green-500/10 text-green-400 fade-in');
+        $statusDot.attr('class', 'status-dot bg-green-400');
+      } else {
+        $statusBar.attr('class', 'flex items-center gap-2 text-sm font-medium mt-4 py-2.5 px-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 fade-in');
+        $statusDot.attr('class', 'status-dot bg-red-400');
+      }
+    }
+
+    function setLoading(label) {
+      $statusBar.removeClass('hidden').addClass('flex');
+      $statusBar.attr('class', 'flex items-center gap-2 text-sm font-medium mt-4 py-2.5 px-4 rounded-xl border border-blue-neon/30 bg-blue-neon/10 text-blue-neon fade-in');
+      $statusDot.attr('class', 'status-dot bg-blue-neon animate-pulse');
+      $statusText.text(label);
+      $statusCode.text('');
+    }
+
+    function renderOutput(data) {
+      lastJson = JSON.stringify(data, null, 2);
+      $output.html('<code class="language-json">' + lastJson.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>');
+      $output.find('code').each(function(i, el) {
+        hljs.highlightElement(el);
+      });
+      $copyBtn.removeClass('hidden');
+    }
+
+    function setSpinner(loading) {
+      if (loading) {
+        $scanCard.addClass('scanning');
+        $btnIcon.html('<svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>');
+        $btnLabel.text('Checking…');
+        $scanBtn.prop('disabled', true);
+      } else {
+        $scanCard.removeClass('scanning');
+        $btnIcon.html('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
+        $btnLabel.text('Check Status');
+        $scanBtn.prop('disabled', false);
+      }
+    }
+
+    $scanBtn.on('click', function() {
+          const tagUid = $tagUid.val().trim();
+          if (!tagUid) {
+            setStatus(false, 'Tag UID is required.', '—');
+            return;
+          }
+
+          setSpinner(true);
+          setLoading('Validating tag UID…');
+
+          $.ajax({ //Check Tag UID
+            url: '/user/checkTagUID',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+              tag_uid: tagUid
+            }),
+            success: function(tagBody, _status, xhr) {
+              setLoading('Loading voucher redemption state…');
+
+              $.ajax({ //Check pending redemption voucher for this tag UID
+                  url: '/user/checkOnProcessVoucher',
+                  method: 'POST',
+                  contentType: 'application/json',
+                  data: JSON.stringify({
+                    tag_uid: tagUid
+                  }),
+                  success: function(voucherBody, _s2, xhr2) {
+                    const pendingVoucherId = voucherBody.data ? voucherBody.data.claimed_voucher_id : null;
+
+                    $.ajax({ //If there's a pending redemption voucher, attempt to finalize it
+                        url: '/user/endRedeemVoucher',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                          tag_uid: tagUid,
+                          claimed_voucher_id: pendingVoucherId
+                        }),
+                        success: function(finalBody, _s3, xhr3) {
+                          const combined = {
+                            tag_check: tagBody,
+                            pending_voucher: voucherBody,
+                            redemption_result: finalBody,
+                          };
+                          setStatus(true, 'Tag and voucher status fetched successfully', xhr3.status);
+                          renderOutput(combined);
+                          setSpinner(false);
+                        },
+                        error: function(xhr3) {
+                          let errBody;
+                          try {
+                            errBody = JSON.parse(xhr3.responseText);
+                          } catch (e) {
+                            errBody = {
+                              message: 'Invalid JSON from server'
+                            };
+                          }
+                          const combined = {
+                            tag_check: tagBody,
+                            pending_voucher: voucherBody,
+                            redemption_error: errBody,
+                            note: 'Failed to update voucher redemption status.',
+                          };
+                          setStatus(false, 'Voucher redemption failed', xhr3.status);
+                          renderOutput(combined);
+                          setSpinner(false);
+                        }
+                    });
+                  },
+                  error: function(xhr2) {
+                    let errBody;
+                    try {
+                      errBody = JSON.parse(xhr2.responseText);
+                    } catch (e) {
+                      errBody = {
+                        message: 'Invalid JSON from server'
+                      };
+                    }
+                    const combined = {
+                      tag_check: tagBody,
+                      voucher_error: errBody,
+                      note: 'Unable to load claimed vouchers.',
+                    };
+                    setStatus(false, 'Redemption status lookup failed', xhr2.status);
+                    renderOutput(combined);
+                    setSpinner(false);
+                  }
+                });
+
+                },
+                error: function(xhr) {
+                  let errBody;
+                  try {
+                    errBody = JSON.parse(xhr.responseText);
+                  } catch (e) {
+                    errBody = {
+                      message: 'Invalid JSON from server'
+                    };
+                  }
+                  setStatus(false, 'Tag scan failed', xhr.status);
+                  renderOutput(errBody);
+                  setSpinner(false);
+                }
+              });
+          });
+
+          // Copy JSON
+          $copyBtn.on('click', function() {
+            if (!lastJson) return;
+            navigator.clipboard.writeText(lastJson).then(() => {
+              $copyBtn.text('Copied!');
+              setTimeout(() => $copyBtn.text('Copy JSON'), 1800);
+            });
+          });
+
+          // Enter key
+          $tagUid.on('keydown', function(e) {
+            if (e.key === 'Enter') $scanBtn.trigger('click');
+          });
+  </script>
 </body>
 
-<script>
-    async function postJson(url, payload) {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        let body;
-        try {
-            body = await response.json();
-        } catch (error) {
-            body = { message: 'Invalid JSON response from server' };
-        }
-
-        return { ok: response.ok, status: response.status, body };
-    }
-
-    function setResult(statusNode, outputNode, result, successLabel, failLabel) {
-        statusNode.textContent = result.ok
-            ? successLabel + ' (' + result.status + ')'
-            : failLabel + ' (' + result.status + ')';
-
-        statusNode.style.color = result.ok ? '#147b38' : '#b4232f';
-        outputNode.textContent = JSON.stringify(result.body, null, 2);
-    }
-
-    const scanForm = document.getElementById('scan-form');
-    const scanTagUid = document.getElementById('scan_tag_uid');
-    const scanStatus = document.getElementById('scan-status');
-    const scanOutput = document.getElementById('scan-output');
-    const scanBtn = document.getElementById('scan-btn');
-
-    scanForm.addEventListener('submit', async function (event) {
-        event.preventDefault();
-
-        const tagUid = scanTagUid.value.trim();
-        if (!tagUid) {
-            scanStatus.textContent = 'Tag UID is required.';
-            scanStatus.style.color = '#b4232f';
-            return;
-        }
-
-        scanBtn.disabled = true;
-        scanStatus.textContent = 'Checking tag and loading active redemption state...';
-        scanStatus.style.color = '#1748d8';
-
-        const tagResult = await postJson('/user/checkTagUID', { tag_uid: tagUid });
-
-        if (!tagResult.ok) {
-            setResult(scanStatus, scanOutput, tagResult, 'Tag scan success', 'Tag scan failed');
-            scanBtn.disabled = false;
-            return;
-        }
-
-        const statusResult = await postJson('/claimed-vouchers/vouchers', { tag_uid: tagUid });
-
-        const payload = statusResult.ok ? statusResult.body : { message: 'Unable to load claimed vouchers', details: statusResult.body };
-        const activeVouchers = Array.isArray(statusResult.body)
-            ? statusResult.body.filter(function (voucher) {
-                return !voucher.claimed_at;
-            })
-            : [];
-
-        const combined = {
-            tag_check: tagResult.body,
-            active_claims: activeVouchers,
-            all_claimed_vouchers: statusResult.body,
-            note: activeVouchers.length
-                ? 'This tag currently has vouchers pending redemption.'
-                : 'No vouchers are currently pending redemption for this tag.'
-        };
-
-        setResult(scanStatus, scanOutput, { ok: statusResult.ok, status: statusResult.status, body: combined }, 'Redemption status loaded', 'Redemption status lookup failed');
-
-        scanBtn.disabled = false;
-    });
-</script>
 </html>

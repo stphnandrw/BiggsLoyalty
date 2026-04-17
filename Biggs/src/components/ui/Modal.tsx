@@ -227,8 +227,6 @@ export function SuccessModal({ description, visible, onClose }: ModalProps) {
   );
 }
 
-// â”€â”€â”€ ConfirmBottomSheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export function ConfirmBottomSheet({
   visible,
   title,

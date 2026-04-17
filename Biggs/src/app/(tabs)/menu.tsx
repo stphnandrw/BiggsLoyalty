@@ -1,31 +1,32 @@
 import { HeaderBigLogo } from "@/src/components/layout/header";
-import { SmallPrimaryButton } from "@/src/components/ui/Buttons";
+import { PrimaryButton, SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { ProductCard } from "@/src/components/ui/Cards";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { getAllMenu } from "@/src/services/api/menu";
 import {
-    addFavoriteMenu,
-    getFavoriteMenuByTagUid,
+  addFavoriteMenu,
+  getFavoriteMenuByTagUid,
 } from "@/src/services/api/user";
 import type { MenuItem } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
 import {
-    clearFavoriteMenuItemSelectionMode,
-    getFavoriteMenuItemSelectionMode,
+  clearFavoriteMenuItemSelectionMode,
+  getFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { parseHtmlText } from "@/src/utils/htmlParser";
 import { useQuery } from "@tanstack/react-query";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -244,6 +245,8 @@ export default function FavoriteMenu() {
     isPending,
     isFetching,
     isError,
+    refetch,
+    isRefetching,
   } = useQuery({
     queryKey: ["menu"],
     queryFn: getAllMenu,
@@ -601,14 +604,28 @@ export default function FavoriteMenu() {
         {isLoadingMenu ? (
           <LoadingOverlay />
         ) : showErrorState ? (
-          <View className="items-center pt-10">
+          <View className="items-center pt-10 gap-4">
             <Text className="text-red-400 text-sm">Failed to load menu.</Text>
+            <PrimaryButton
+              buttonName="Reload"
+              onPress={() => void refetch()}
+              buttonWidth={160}
+              isFontSmall
+              isCentered
+            />
           </View>
         ) : showEmptyState ? (
-          <View className="items-center pt-10">
+          <View className="items-center pt-10 gap-4">
             <Text className="text-gray-400 text-sm">
               No items in this category.
             </Text>
+            <PrimaryButton
+              buttonName="Reload"
+              onPress={() => void refetch()}
+              buttonWidth={160}
+              isFontSmall
+              isCentered
+            />
           </View>
         ) : (
           <FlatList
@@ -617,6 +634,14 @@ export default function FavoriteMenu() {
             horizontal={false}
             data={filteredMenu}
             keyExtractor={(item, index) => `${item?.m_id ?? "menu"}-${index}`}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={() => {
+                  void refetch();
+                }}
+              />
+            }
             ListHeaderComponent={
               isFetching && hasSourceMenuData ? (
                 <View className="w-full items-center pb-3">

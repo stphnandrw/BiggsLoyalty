@@ -4,17 +4,6 @@ namespace App\Controllers;
 
 class UserController extends BaseController
 {
-    public function getUsers()
-    {
-        log_message('debug', 'Fetching all users');
-
-        $users = $this->userModel->findAll();
-
-        log_message('debug', 'Users fetched count: ' . count($users));
-
-        return $this->response->setJSON($users);
-    }
-
     public function getUserByTagUID()
     {
         $data = $this->request->getJSON();

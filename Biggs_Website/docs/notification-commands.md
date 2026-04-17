@@ -62,7 +62,7 @@ Run every minute for queue processing:
 - app/Models/EmployeeModel.php
 
 ## Employee auth note
-
+ 
 - Manual send endpoint expects `employee_api_key`.
 - Backward compatibility is kept for `admin_api_key` while clients are migrating.
 

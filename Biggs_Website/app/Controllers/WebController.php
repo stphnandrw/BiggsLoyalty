@@ -8,4 +8,9 @@ class WebController extends BaseController
     {
         return view('Notification/manager');
     }
+
+    public function nfcSimulator(): string
+    {
+        return view('Testing/nfc_simulator');
+    }
 }

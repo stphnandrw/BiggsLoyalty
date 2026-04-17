@@ -45,7 +45,6 @@ export default function RootLayout() {
                 initialRouteName="index"
               >
                 <Stack.Screen name="index" />
-                <Stack.Screen name="splash" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(vouchers)" />
                 <Stack.Screen name="(more)" />
@@ -62,4 +61,3 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
-

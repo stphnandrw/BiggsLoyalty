@@ -2,13 +2,13 @@ import { VoucherPageContent } from "@/src/components/features/VoucherPageContent
 import { HeaderBigLogo } from "@/src/components/layout/header";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { useAuthStatus } from "@/src/hooks/useAuthStatus";
-import { getUserClaimedVouchers } from "@/src/services/api/vouchers";
+import { getRedeemedVouchers } from "@/src/services/api/vouchers";
 import type { ClaimedVoucher } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VoucherHistory() {
@@ -35,14 +35,19 @@ export default function VoucherHistory() {
     loadUser();
   }, []);
 
-  const { data: claimedVouchers = [], isLoading } = useQuery({
+  const {
+    data: claimedVouchers = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["claimedVouchers", tagUid],
-    queryFn: () => getUserClaimedVouchers(tagUid as string),
+    queryFn: () => getRedeemedVouchers(tagUid as string),
     enabled: !!tagUid,
   });
 
   const isRedeemedVoucher = (voucher: ClaimedVoucher) =>
-    Boolean(voucher.claimed_at);
+    Boolean(voucher.redeemed_at);
 
   const redeemedVouchers = claimedVouchers.filter((voucher) =>
     isRedeemedVoucher(voucher),
@@ -67,8 +72,7 @@ export default function VoucherHistory() {
         description: voucher.description,
         required_points: String(voucher.required_points),
         image_url: voucher.image_url,
-        claimed_at: voucher.claimed_at ?? "",
-        date_redeemed: "",
+        redeemed_at: voucher.redeemed_at ?? "",
         redeemable: "false",
       },
     });
@@ -84,28 +88,40 @@ export default function VoucherHistory() {
         {loading ? (
           <LoadingOverlay />
         ) : (
-          <View className="flex-1 pt-16">
-            <View className="w-full items-center justify-center mb-6">
-              <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
-                Redeemed History
-              </Text>
-            </View>
+          <ScrollView
+            className="flex-1"
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={() => {
+                  void refetch();
+                }}
+              />
+            }
+          >
+            <View className="flex-1 pt-16">
+              <View className="w-full items-center justify-center mb-6">
+                <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
+                  Redeemed History
+                </Text>
+              </View>
 
-            <VoucherPageContent
-              searchPlaceholder="Search Redeemed Vouchers"
-              onSearchChange={setSearch}
-              vouchers={filteredRedeemedVouchers}
-              claimedVoucherIds={redeemedVoucherIds}
-              emptyMessage={`No redeemed vouchers yet.\nRedeem a voucher to see it here.`}
-              onViewVoucher={(voucher) => {
-                if ("claimed_voucher_id" in voucher) {
-                  openVoucherDetails(voucher);
-                }
-              }}
-              onToggleClaim={() => {}}
-              scope="history"
-            />
-          </View>
+              <VoucherPageContent
+                searchPlaceholder="Search Redeemed Vouchers"
+                onSearchChange={setSearch}
+                vouchers={filteredRedeemedVouchers}
+                claimedVoucherIds={redeemedVoucherIds}
+                emptyMessage={`No redeemed vouchers yet.\nRedeem a voucher to see it here.`}
+                onViewVoucher={(voucher) => {
+                  if ("claimed_voucher_id" in voucher) {
+                    openVoucherDetails(voucher);
+                  }
+                }}
+                onToggleClaim={() => {}}
+                scope="history"
+              />
+            </View>
+          </ScrollView>
         )}
       </View>
     </SafeAreaView>
