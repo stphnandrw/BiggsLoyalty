@@ -39,6 +39,11 @@ abstract class BaseController extends Controller
     protected $packageModel;
     protected $notificationRecipientModel;
     protected $claimedVoucherModel;
+    protected $employeeModel;
+    protected $brandName;
+    protected $productName;
+    protected $shortName;
+
 
     /**
      * @return void
@@ -66,6 +71,12 @@ abstract class BaseController extends Controller
         $this->packageModel = service('packageModel');
         $this->notificationRecipientModel = service('notificationRecipientModel');
         $this->claimedVoucherModel = service('claimedVoucherModel');
+        $this->employeeModel = service('employeeModel');
+
+        // Use descriptive keys that explain the context of the name
+        $this->brandName     = 'Biggs Inc.';     
+        $this->productName   = 'Biggs Loyalty';  
+        $this->shortName     = 'Biggs';          
 
 
 

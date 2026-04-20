@@ -72,7 +72,6 @@ class BookingController extends BaseController
 		]);
 	}
 
-
 	public function createBooking()
 	{
 		$data = $this->request->getJSON();
@@ -275,4 +274,221 @@ class BookingController extends BaseController
 			'data' => $bookings,
 		]);
 	}
+
+	public function getBookingById()
+	{
+		$data = $this->request->getJSON();
+		$bookingId = (int) ($data->booking_id ?? 0);
+
+		if ($bookingId <= 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'booking_id is required',
+			]);
+		}
+
+		$booking = $this->bookingModel->getBookingDetailsById($bookingId);
+
+		if (!$booking) {
+			return $this->response->setStatusCode(404)->setJSON([
+				'status' => 'error',
+				'message' => 'Booking not found',
+			]);
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Booking details fetched successfully',
+			'data' => $booking,
+		]);
+	}
+
+	public function getUserDetailsByTagUid()
+	{
+		$data = $this->request->getJSON();
+
+		$isVerified = $data->is_verified ?? false;
+		$tagUid = trim((string) ($data->tag_uid ?? ''));
+
+		if (!$isVerified) {
+			return $this->response->setStatusCode(403)->setJSON([
+				'status' => 'error',
+				'message' => 'User verification failed. Access denied.',
+			]);
+		}
+
+		if ($tagUid === '') {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'tag_uid is required',
+			]);
+		}
+
+		$user = $this->userModel->getUserByTagUid($tagUid);
+
+		if (!$user) {
+			return $this->response->setStatusCode(404)->setJSON([
+				'status' => 'error',
+				'message' => 'User not found',
+			]);
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'User details fetched successfully',
+			'data' => $user,
+		]);
+	}
+
+	public function approveBooking()
+	{
+		$data = $this->request->getJSON();
+		$bookingId = (int) ($data->booking_id ?? 0);
+
+		if ($bookingId <= 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'booking_id is required',
+			]);
+		}
+
+		$booking = $this->bookingModel->find($bookingId);
+		if (!$booking) {
+			return $this->response->setStatusCode(404)->setJSON([
+				'status' => 'error',
+				'message' => 'Booking not found',
+			]);
+		}
+
+		if ((int) ($booking['status'] ?? 0) !== 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'Only pending bookings can be approved',
+			]);
+		}
+
+		$approved = $this->bookingModel->update($bookingId, ['status' => 'confirmed']);
+
+		if (!$approved) {
+			return $this->response->setStatusCode(500)->setJSON([
+				'status' => 'error',
+				'message' => 'Failed to approve booking',
+			]);
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Booking approved successfully',
+		]);
+	}
+	public function rejectBooking()
+	{
+		$data = $this->request->getJSON();
+		$bookingId = (int) ($data->booking_id ?? 0);
+
+		if ($bookingId <= 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'booking_id is required',
+			]);
+		}
+
+		$booking = $this->bookingModel->find($bookingId);
+		if (!$booking) {
+			return $this->response->setStatusCode(404)->setJSON([
+				'status' => 'error',
+				'message' => 'Booking not found',
+			]);
+		}
+
+		if ((int) ($booking['status'] ?? 0) !== 0) {
+			return $this->response->setStatusCode(400)->setJSON([
+				'status' => 'error',
+				'message' => 'Only pending bookings can be rejected',
+			]);
+		}
+
+		$rejected = $this->bookingModel->update($bookingId, ['status' => 'rejected']);
+
+		if (!$rejected) {
+			return $this->response->setStatusCode(500)->setJSON([
+				'status' => 'error',
+				'message' => 'Failed to reject booking',
+			]);
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'message' => 'Booking rejected successfully',
+		]);
+	}
+
+	public function rescheduleBooking()
+{
+    $data = $this->request->getJSON();
+    $bookingId = (int) ($data->booking_id ?? 0);
+    $newSlotId = (int) ($data->new_slot_id ?? 0);
+
+    log_message('info', 'Reschedule request received: booking_id=' . $bookingId . ', new_slot_id=' . $newSlotId);
+    
+    if ($bookingId <= 0 || $newSlotId <= 0) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'status' => 'error',
+            'message' => 'booking_id and new_slot_id are required',
+        ]);
+    }
+
+    $booking = $this->bookingModel->find($bookingId);
+
+    log_message('info', 'Booking fetched for reschedule: ' . json_encode($booking));
+    if (!$booking) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'status' => 'error',
+            'message' => 'Booking not found',
+        ]);
+    }
+
+    // Only confirmed bookings can be rescheduled
+    $bookingStatus = strtolower(trim($booking['status'] ?? ''));
+    if ($bookingStatus !== 'confirmed') {
+        return $this->response->setStatusCode(400)->setJSON([
+            'status' => 'error',
+            'message' => 'Only confirmed bookings can be rescheduled. Current status: ' . $bookingStatus,
+        ]);
+    }
+
+    $slot = $this->bookingSlotModel->getSlotWithAvailability($newSlotId);
+
+    log_message('info', 'New slot fetched for reschedule: ' . json_encode($slot));
+
+    if (!$slot) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'status' => 'error',
+            'message' => 'New slot not found',
+        ]);
+    }
+
+    if ((int) ($slot['is_available'] ?? 0) !== 1) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'status' => 'error',
+            'message' => 'Selected new slot is not available',
+        ]);
+    }
+
+    $rescheduled = $this->bookingModel->update($bookingId, ['slot_id' => $newSlotId]);
+
+    if (!$rescheduled) {
+        return $this->response->setStatusCode(500)->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to reschedule booking',
+        ]);
+    }
+
+    log_message('info', 'Booking rescheduled successfully: ' . $bookingId);
+    return $this->response->setJSON([
+        'status' => 'success',
+        'message' => 'Booking rescheduled successfully',
+    ]);
 }
+}
+

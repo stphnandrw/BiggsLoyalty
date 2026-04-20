@@ -17,6 +17,7 @@ use App\Models\PackageModel;
 use App\Models\UserModel;
 use App\Models\UserTokensModel;
 use App\Models\VoucherModel;
+use App\Models\EmployeeModel;
 use App\Services\ExpoPushService;
 use App\Services\NotificationService;
 use CodeIgniter\Config\BaseService;
@@ -195,5 +196,14 @@ class Services extends BaseService
         }
 
         return new ClaimedVoucherModel();
+    }
+
+    public static function employeeModel($getShared = true): EmployeeModel
+    {
+        if ($getShared) {
+            return static::getSharedInstance('employeeModel');
+        }
+
+        return new EmployeeModel();
     }
 }

@@ -5,9 +5,13 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'UserController::index');
-$routes->get('testing/nfc-simulator', 'Home::nfcSimulator');
-$routes->get('notification/manage', 'WebController::manager');
+$routes->get('/', 'AuthenticationController::index');
+$routes->get('/signup', 'AuthenticationController::signup');
+$routes->post('/login', 'AuthenticationController::login');
+$routes->post('/logout', 'AuthenticationController::logout');
+$routes->post('/register', 'AuthenticationController::register');
+$routes->get('bookings', 'WebController::bookings');
+$routes->get('notifications', 'WebController::manager');
 $routes->get('nfc', 'WebController::nfcSimulator');
 
 $routes->group('user', function ($routes) {
@@ -22,7 +26,7 @@ $routes->group('user', function ($routes) {
 
     // Loyalty points
     $routes->post('loyalty-points', 'UserController::getLoyaltyPoints');
-    
+
     // Add Favorite routes
     $routes->post('addFavoriteMenu', 'UserController::addFavoriteMenu');
     $routes->post('addFavoriteLocation', 'UserController::addFavoriteLocation');
@@ -59,7 +63,12 @@ $routes->group('menu', function ($routes) {
 $routes->group('branches', function ($routes) {
     $routes->get('/', 'BookingController::getBranches');
     $routes->get('(:num)', 'BranchController::getBranchById/$1');
-    $routes->post('booking', 'BookingController::getAllBookingByBranch');
+    $routes->post('bookings', 'BookingController::getAllBookingByBranch'); // For branch manager to view all bookings of their branch
+    $routes->post('booking', 'BookingController::getBookingById'); // For branch manager to view their bookings of a specific branch
+    $routes->post('approve-booking', 'BookingController::approveBooking'); // For branch manager to approve a booking
+    $routes->post('reject-booking', 'BookingController::rejectBooking'); // For branch manager to reject a booking
+    $routes->post('cancel-booking', 'BookingController::cancelBooking'); // For branch manager to cancel a booking
+    $routes->post('reschedule-booking', 'BookingController::rescheduleBooking'); // For branch manager to reschedule a booking
 });
 
 $routes->group('booking', function ($routes) {

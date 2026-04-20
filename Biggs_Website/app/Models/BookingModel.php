@@ -69,4 +69,19 @@ class BookingModel extends Model
             ->get()
             ->getResultArray();
     }
+
+    public function getBookingDetailsById($bookingId)
+    {
+        return $this->db->table('bookings b')
+            ->select('b.*, b.booking_id AS id, s.branch_id, s.slot_date, s.time_start, s.time_end, p.package_name, p.pax_size, p.price as price_per_head, u.name as customer_name, u.phone_number as customer_phone, u.email as customer_email')
+            ->join('booking_slots s', 's.slot_id = b.slot_id', 'left')
+            ->join('packages p', 'p.package_id = b.package_id', 'left')
+            ->join('btc_profile u', 'u.tag_uid = b.tag_uid', 'left')
+            ->join('btc_loyalty l', 'l.tag_uid = b.tag_uid', 'left')
+            ->where('b.booking_id', $bookingId)
+            ->get()
+            ->getFirstRow('array');
+    }
+
+    
 }

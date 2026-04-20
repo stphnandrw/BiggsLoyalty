@@ -12,11 +12,31 @@ class EmployeeModel extends Model
     protected $allowedFields = [
         'username',
         'password',
-        'api_key',
+        'employee_type',
+        'assigned_at',
         'is_active',
         'created_at',
         'updated_at',
     ];
+
+    public function hashPassword($password)
+    {
+        return password_hash($password, PASSWORD_BCRYPT);
+    }
+
+    public function verifyPassword($password, $hash)
+    {
+        return password_verify($password, $hash);
+    }
+
+    public function findByUsername(string $username): ?array
+    {
+        $employee = $this->select('employees.*, biggs_branches.*')
+            ->join('biggs_branches', 'biggs_branches.id = employees.assigned_at', 'left')
+            ->where('username', $username)
+            ->first();
+        return $employee ?: null;
+    }
 
     public function findActiveByApiKey(string $apiKey): ?array
     {

@@ -43,4 +43,9 @@ class UserModel extends Model
     {
         return $this->select('fave_item')->where('tag_uid', $tag_uid)->first();
     }
+
+    public function getUserByTagUid($tag_uid)
+    {
+        return $this->select('tag_uid, phone_number, email, name, birthday')->where('tag_uid', $tag_uid)->first();
+    }
 }
