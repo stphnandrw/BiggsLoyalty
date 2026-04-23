@@ -65,7 +65,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
 
-  <div class="max-w-5xl mx-auto space-y-5">
+  <div class="max-w-full mx-auto space-y-5">
 
     <!-- Header -->
     <div class="flex items-center justify-between">

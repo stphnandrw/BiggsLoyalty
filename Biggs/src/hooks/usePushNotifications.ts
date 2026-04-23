@@ -1,6 +1,6 @@
 ﻿import {
-    NOTIFICATION_ACTIONS,
-    registerNotificationCategories,
+  NOTIFICATION_ACTIONS,
+  registerNotificationCategories,
 } from "@/src/services/notifications";
 import { setItem } from "@/src/utils/asyncStorage";
 import Constants from "expo-constants";
@@ -13,6 +13,31 @@ import { Platform } from "react-native";
 export interface PushNotificationState {
   expoPushToken: string;
   notification: Notifications.Notification | undefined;
+}
+
+type NotificationRouteData = {
+  screen?: string;
+  redirect?: string;
+};
+
+function normalizeRoutePath(path: string): string {
+  const trimmed = path.trim();
+  if (trimmed === "") return "";
+
+  const withoutBrackets = trimmed.replace(/\[([^\]/]+)\]/g, "$1");
+  return withoutBrackets.startsWith("/")
+    ? withoutBrackets
+    : `/${withoutBrackets}`;
+}
+
+function resolveNotificationRoute(data?: NotificationRouteData): string | null {
+  const candidate = data?.redirect ?? data?.screen;
+  if (!candidate || typeof candidate !== "string") {
+    return null;
+  }
+
+  const normalized = normalizeRoutePath(candidate);
+  return normalized || null;
 }
 
 function handleRegistrationError(errorMessage: string) {
@@ -88,8 +113,26 @@ export function usePushNotifications(): PushNotificationState {
     ) {
       const actionId = response.actionIdentifier;
       const data = response.notification.request.content.data as
-        | { screen?: string }
+        | NotificationRouteData
         | undefined;
+      const payloadRoute = resolveNotificationRoute(data);
+
+      if (
+        actionId === NOTIFICATION_ACTIONS.NOT_NOW ||
+        actionId === NOTIFICATION_ACTIONS.REMIND_LATER
+      ) {
+        return;
+      }
+
+      if (actionId === NOTIFICATION_ACTIONS.LOG_IN) {
+        router.push("/(auth)/login");
+        return;
+      }
+
+      if (payloadRoute) {
+        router.push(payloadRoute as any);
+        return;
+      }
 
       if (
         // User tapped the notification banner itself
@@ -99,11 +142,6 @@ export function usePushNotifications(): PushNotificationState {
         actionId === NOTIFICATION_ACTIONS.SEE_OFFERS
       ) {
         router.push("/(tabs)/vouchers");
-      } else if (actionId === NOTIFICATION_ACTIONS.LOG_IN) {
-        router.push("/(auth)/login");
-      } else if (data?.screen) {
-        // Fallback: use the screen embedded in the notification data
-        router.push(data.screen as any);
       }
       // REMIND_LATER and NOT_NOW actions do nothing - opensAppToForeground: false
       // means the app won't even open for those.

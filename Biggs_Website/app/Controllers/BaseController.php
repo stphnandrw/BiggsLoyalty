@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Services\NotificationService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -38,6 +39,7 @@ abstract class BaseController extends Controller
     protected $bookingSlotModel;
     protected $packageModel;
     protected $notificationRecipientModel;
+    protected NotificationService $notificationService;
     protected $claimedVoucherModel;
     protected $employeeModel;
     protected $brandName;
@@ -70,6 +72,7 @@ abstract class BaseController extends Controller
         $this->bookingSlotModel = service('bookingSlotModel');
         $this->packageModel = service('packageModel');
         $this->notificationRecipientModel = service('notificationRecipientModel');
+        $this->notificationService = service('notificationService');
         $this->claimedVoucherModel = service('claimedVoucherModel');
         $this->employeeModel = service('employeeModel');
 
@@ -77,8 +80,6 @@ abstract class BaseController extends Controller
         $this->brandName     = 'Biggs Inc.';     
         $this->productName   = 'Biggs Loyalty';  
         $this->shortName     = 'Biggs';          
-
-
 
         $this->session = service('session');
 
@@ -115,5 +116,47 @@ abstract class BaseController extends Controller
     private function isWebSessionRequest(): bool
     {
         return !$this->request->isCLI();
+    }
+
+    
+    protected function checkSession(): void
+    {
+        if (!$this->session->get('is_logged_in')) {
+            $this->response->redirect('/')->send(
+                'message', 'Please log in to access this page.'
+            );
+            exit();
+        }
+    }
+
+    protected function createGenericNotification(
+        string $title,
+        string $body,
+        array $targetUsers = [],
+        string $targetType = 'selected',
+        array $dataPayload = [],
+        string $type = 'general',
+        ?string $scheduledAt = null,
+        ?int $createdByEmployeeId = 1
+    ): array {
+        $targetType = trim($targetType);
+        if (!in_array($targetType, ['broadcast', 'selected'], true)) {
+            throw new \InvalidArgumentException('targetType must be broadcast or selected');
+        }
+
+        if ($targetType === 'selected' && empty($targetUsers)) {
+            throw new \InvalidArgumentException('targetUsers is required for selected targetType');
+        }
+
+        return $this->notificationService->createAndSend([
+            'title' => trim($title),
+            'body' => trim($body),
+            'type' => trim($type) !== '' ? trim($type) : 'general',
+            'target_type' => $targetType,
+            'target_users' => $targetUsers,
+            'data_payload' => $dataPayload,
+            'scheduled_at' => $scheduledAt,
+            'created_by_employee_id' => $createdByEmployeeId,
+        ]);
     }
 }

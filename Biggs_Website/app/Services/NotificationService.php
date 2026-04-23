@@ -132,18 +132,18 @@ class NotificationService
     {
         $notification = $this->notificationModel->find($notificationId);
         if (!$notification) {
-            log_message('error', 'Attempt to send non-existent notification_id {nid}', ['nid' => $notificationId]);
+            
             throw new \RuntimeException('Notification not found');
         }
 
         if ($this->recipientModel->hasRecipients($notificationId)) {
-            log_message('warning', 'Attempt to resend notification_id {nid} which already has recipients', ['nid' => $notificationId]);
+            
             throw new \RuntimeException('Notification has already been sent to recipients');
         }
 
         $users = $this->resolveTargetUsers($targetType, $targetUsers);
         if (empty($users)) {
-            log_message('error', 'No target users found for notification_id {nid}', ['nid' => $notificationId]);
+            
             throw new \RuntimeException('No target users found for this notification');
         }
 

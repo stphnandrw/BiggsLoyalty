@@ -449,7 +449,7 @@ CREATE TABLE `packages` (
   `package_name` varchar(100) NOT NULL,
   `details` text NOT NULL,
   `pax_size` int(11) NOT NULL,
-  `price` double(2,0) NOT NULL
+  `price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

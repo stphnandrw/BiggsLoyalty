@@ -1,5 +1,5 @@
-<main class="min-h-screen bg-gray-100 text-gray-900">
-    <div class="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 lg:px-8">
+<main class="w-full min-h-screen bg-gray-100 text-gray-900">
+    <div class="mx-auto max-w-full px-4 py-4 sm:px-6 lg:px-8">
 
         <!-- Header -->
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -12,6 +12,31 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <div class="relative inline-block">
+                    <button id="viewModeBtn" type="button" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 flex items-center gap-2">
+                        <svg id="viewModeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 12.75h2.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 0 1 9.75 19.875v-6.75Zm6-9h2.25A1.125 1.125 0 0 1 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125c0-.621.504-1.125 1.125-1.125Z" />
+                        </svg>
+                        <span id="viewModeText">Table</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="viewModeDropdown" class="hidden absolute right-0 mt-2 w-40 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                        <button type="button" class="view-mode-option w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-t-xl flex items-center gap-2" data-mode="table">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 12.75h2.25c.621 0 1.125.504 1.125 1.125v6.75c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 0 1 9.75 19.875v-6.75Zm6-9h2.25A1.125 1.125 0 0 1 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125c0-.621.504-1.125 1.125-1.125Z" />
+                            </svg>
+                            Table View
+                        </button>
+                        <button type="button" class="view-mode-option w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-b-xl flex items-center gap-2" data-mode="calendar">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                            </svg>
+                            Calendar View
+                        </button>
+                    </div>
+                </div>
                 <button type="button" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">Add Booking</button>
             </div>
         </div>
@@ -804,7 +829,7 @@
 
             doBookingAction('reschedule-booking', {
                 booking_id: _activeBookingId,
-                new_slot_id: slotId,
+                new_slot_id: slotId
             });
         });
 
@@ -820,6 +845,34 @@
             e.stopPropagation();
             const bookingId = $(this).closest('tr').find('td:first span:first').text().replace('#', '');
             fetchBooking(bookingId);
+        });
+    });
+
+    /* ─────────────── VIEW MODE SWITCHER ─────────────── */
+    $(function() {
+        const viewModeBtn = document.getElementById('viewModeBtn');
+        const viewModeDropdown = document.getElementById('viewModeDropdown');
+        const viewModeOptions = document.querySelectorAll('.view-mode-option');
+        
+        // Toggle dropdown
+        viewModeBtn.addEventListener('click', () => {
+            viewModeDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!viewModeBtn.contains(e.target) && !viewModeDropdown.contains(e.target)) {
+                viewModeDropdown.classList.add('hidden');
+            }
+        });
+
+        // Handle view mode selection
+        viewModeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const mode = option.dataset.mode;
+                localStorage.setItem('bookingsViewMode', mode);
+                window.location.href = `<?= base_url('/bookings') ?>?view=${mode}`;
+            });
         });
     });
 </script>

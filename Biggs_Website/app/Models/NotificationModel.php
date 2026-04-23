@@ -23,6 +23,11 @@ class NotificationModel extends Model
         'updated_at',
     ];
 
+    public function insertNotification(array $notificationData, array $recipientUserIds): int
+    {
+        return (int)$this->insert($notificationData);
+    }
+
     public function getDueScheduled(int $limit = 100): array
     {
         return $this->where('status', 'scheduled')

@@ -1,6 +1,6 @@
 <?php
 $title = $title ?? 'Biggs Website';
-$bodyClass = $bodyClass ?? 'min-h-screen bg-slate-50 text-slate-900 md:pl-[290px]';
+$bodyClass = $bodyClass ?? 'min-h-screen bg-slate-50 text-slate-900';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,4 +32,4 @@ $bodyClass = $bodyClass ?? 'min-h-screen bg-slate-50 text-slate-900 md:pl-[290px
 	</script>
 </head>
 <body class="<?= esc($bodyClass) ?>">
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen flex flex-col ml-0 md:ml-[290px]">

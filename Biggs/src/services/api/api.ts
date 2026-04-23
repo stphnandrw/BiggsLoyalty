@@ -7,8 +7,22 @@ type ApiErrorPayload = {
   };
 };
 
-export const baseApiUrl = "http://192.168.4.222:8080"; // Office
-// export const baseApiUrl = "http://192.168.0.58:8082"; // Home
+const DEV_FALLBACK_API_URL = "http://192.168.4.222:8080";
+
+function normalizeApiBaseUrl(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.replace(/\/+$/, "");
+}
+
+const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+console.log("[API] Raw API URL from env:", envApiUrl);
+const resolvedApiBaseUrl =
+  typeof envApiUrl === "string" && envApiUrl.trim() !== ""
+    ? envApiUrl
+    : DEV_FALLBACK_API_URL;
+
+export const baseApiUrl = normalizeApiBaseUrl(resolvedApiBaseUrl);
 
 export const api = axios.create({
   baseURL: baseApiUrl,
@@ -18,6 +32,8 @@ export const api = axios.create({
     Accept: "application/json",
   },
 });
+
+console.log("[API] baseURL:", baseApiUrl);
 
 export const handleApiError = (error: unknown): string => {
   if (isAxiosError(error)) {

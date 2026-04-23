@@ -11,7 +11,6 @@ $routes->post('/login', 'AuthenticationController::login');
 $routes->post('/logout', 'AuthenticationController::logout');
 $routes->post('/register', 'AuthenticationController::register');
 $routes->get('bookings', 'WebController::bookings');
-$routes->get('notifications', 'WebController::manager');
 $routes->get('nfc', 'WebController::nfcSimulator');
 
 $routes->group('user', function ($routes) {
@@ -60,6 +59,7 @@ $routes->group('menu', function ($routes) {
     $routes->get('categories', 'MenuController::getMenuCategories');
 });
 
+
 $routes->group('branches', function ($routes) {
     $routes->get('/', 'BookingController::getBranches');
     $routes->get('(:num)', 'BranchController::getBranchById/$1');
@@ -75,12 +75,16 @@ $routes->group('booking', function ($routes) {
     $routes->post('branch-packages', 'BookingController::getBranchPackages');
     $routes->post('slots', 'BookingController::getAvailableSlots');
     $routes->post('create', 'BookingController::createBooking');
+    $routes->post('create-slot', 'BookingController::createSlot');
+    $routes->post('delete-slot', 'BookingController::deleteSlot');
+    $routes->post('update-slot-availability', 'BookingController::updateSlotAvailability');
     $routes->post('my-bookings', 'BookingController::getMyBookings');
     $routes->post('count', 'BookingController::getBookingCountByTagUid');
     $routes->post('cancel', 'BookingController::cancelBooking');
 });
 
 $routes->group('notifications', function ($routes) {
+$routes->get('/', 'WebController::manager');
     $routes->post('list', 'UserController::getNotificationRecipientsByTagUid');
     $routes->patch('mark-read', 'UserController::markNotificationAsRead');
     $routes->post('mark-read', 'UserController::markNotificationAsRead');
@@ -88,12 +92,20 @@ $routes->group('notifications', function ($routes) {
 });
 
 $routes->group('admin/notifications', function ($routes) {
-    $routes->get('/', 'AdminController::index');
-    $routes->get('(:num)', 'AdminController::show/$1');
-    $routes->post('/', 'AdminController::create');
-    $routes->patch('(:num)', 'AdminController::update/$1');
-    $routes->post('(:num)/update', 'AdminController::update/$1');
-    $routes->delete('(:num)', 'AdminController::delete/$1');
-    $routes->post('(:num)/send', 'AdminController::send/$1');
-    $routes->post('send', 'AdminController::send');
+    $routes->get('/', 'NotificationController::index');
+    $routes->get('(:num)', 'NotificationController::show/$1');
+    $routes->post('/', 'NotificationController::create');
+    $routes->patch('(:num)', 'NotificationController::update/$1');
+    $routes->post('(:num)/update', 'NotificationController::update/$1');
+    $routes->delete('(:num)', 'NotificationController::delete/$1');
+    $routes->post('(:num)/send', 'NotificationController::send/$1');
+    $routes->post('send', 'NotificationController::send');
+});
+
+$routes->group('packages', function ($routes) {
+    $routes->get('/', 'WebController::packages');
+    $routes->post('/', 'PackageController::getPackagesByBranchId');
+    $routes->post('add', 'PackageController::createPackage');
+    $routes->post('update', 'PackageController::updatePackage');
+    $routes->post('delete', 'PackageController::deletePackage');
 });

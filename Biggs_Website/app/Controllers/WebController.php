@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 class WebController extends BaseController
 {
-    private function renderPage(string $pageView, array $data = []): string
+    private function renderPage(string|array $pageViews, array $data = []): string
     {
         $sharedData = array_merge([
             'footerText' => 'Biggs Loyalty. All rights reserved.',
@@ -16,14 +16,25 @@ class WebController extends BaseController
             'shortName' => $this->shortName,
         ], $data);
 
+        $pageContent = '';
+        if (is_array($pageViews)) {
+            foreach ($pageViews as $view) {
+                $pageContent .= view($view, $sharedData);
+            }
+        } else {
+            $pageContent = view($pageViews, $sharedData);
+        }
+
         return view('Templates/Header', $sharedData)
             . view('Templates/Navbar', $sharedData)
-            . view($pageView, $sharedData)
+            . $pageContent
             . view('Templates/Footer', $sharedData);
     }
 
     public function manager(): string
     {
+        $this->checkSession();
+
         return $this->renderPage('Notification/manager', [
             'title' => 'Notification Manager | Biggs Website',
             'activeNav' => 'notification_manager',
@@ -64,8 +75,24 @@ class WebController extends BaseController
 
     public function bookings(): string
     {
-        return $this->renderPage('Pages/ManageBookings', [
+        $this->checkSession();
+        
+        // Detect view mode from query parameter or default to table
+        $viewMode = $this->request->getGet('view') ?? 'table';
+        $pageView = ($viewMode === 'calendar') ? 'Pages/BookingsCalendar' : 'Pages/ManageBookings';
+        
+        return $this->renderPage($pageView, [
             'title' => 'Bookings | Biggs Website',
+            'activeNav' => 'views',
+        ]);
+    }
+
+    public function packages(): string
+    {
+        $this->checkSession();
+        
+        return $this->renderPage('Pages/ManagePackages', [
+            'title' => 'Packages | Biggs Website',
             'activeNav' => 'views',
         ]);
     }
