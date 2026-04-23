@@ -84,7 +84,6 @@ class ClaimedVoucherModel extends Model
     public function checkSelectedVoucher($claimedVoucherId)
     {
         return $this->where('claimed_voucher_id', $claimedVoucherId)
-                    ->where('status', 'pending')
                     ->first();
     }
 }

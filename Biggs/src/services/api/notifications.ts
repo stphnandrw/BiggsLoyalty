@@ -1,4 +1,4 @@
-import { api } from "@/src/services/api/api";
+import { api, isNotFoundError } from "@/src/services/api/api";
 import {
   MarkReadResultSchema,
   NotificationRowListSchema,
@@ -7,6 +7,7 @@ import type {
   AppNotification,
   MarkReadResult,
   NotificationsPayload,
+  NotificationType,
 } from "@/src/types";
 
 export type {
@@ -28,6 +29,25 @@ type RawNotificationRow = {
   data_payload?: Record<string, unknown> | string | null;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+const VALID_NOTIFICATION_TYPES = new Set<NotificationType>([
+  "course",
+  "assignment",
+  "announcement",
+  "reading",
+  "achievement",
+  "default",
+]);
+
+const normalizeNotificationType = (
+  value: string | null | undefined,
+): NotificationType => {
+  if (value && VALID_NOTIFICATION_TYPES.has(value as NotificationType)) {
+    return value as NotificationType;
+  }
+
+  return "default";
 };
 
 interface NotificationsResponse {
@@ -94,7 +114,7 @@ const normalizeNotificationRow = (row: RawNotificationRow): AppNotification => {
     ),
     title: row.title?.trim() || `Notification #${notificationId}`,
     body: row.body?.trim() || row.message?.trim() || "You have a new update.",
-    type: row.type ?? "general",
+    type: normalizeNotificationType(row.type),
     is_read: toBoolean(row.is_read),
     read_at: row.read_at ?? null,
     delivery_status: row.delivery_status ?? "sent",
@@ -180,6 +200,14 @@ export const getNotificationRecipientsByTagUid = async (
     );
     return normalizeNotificationsPayload(response.data);
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return {
+        notifications: [],
+        unread_count: 0,
+        meta: { limit: 0, offset: 0, count: 0 },
+      };
+    }
+
     console.error("Get Notification Recipients By Tag UID API Error:", error);
     throw error;
   }
@@ -204,7 +232,9 @@ export const markNotificationAsRead = async (params: {
       unread_count: parsed.unread_count ?? parsed.data?.unread_count ?? 0,
     };
   } catch (error) {
-    console.error("Mark Notification As Read API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Mark Notification As Read API Error:", error);
+    }
     throw error;
   }
 };
@@ -225,7 +255,9 @@ export const markAllNotificationsAsRead = async (
       unread_count: parsed.unread_count ?? parsed.data?.unread_count ?? 0,
     };
   } catch (error) {
-    console.error("Mark All Notifications As Read API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Mark All Notifications As Read API Error:", error);
+    }
     throw error;
   }
 };

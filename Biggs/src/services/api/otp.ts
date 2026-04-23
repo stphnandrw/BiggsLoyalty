@@ -3,7 +3,7 @@ import {
   VerifyOtpResponseSchema,
 } from "@/src/services/api/schemas/otp";
 import type { GenerateOtpResponse, VerifyOtpResponse } from "@/src/types";
-import { api } from "./api";
+import { api, isNotFoundError } from "./api";
 
 export const generateOTP = async (
   phone_number: string,
@@ -19,7 +19,9 @@ export const generateOTP = async (
     console.log("Generate OTP API Response:", response.data);
     return GenerateOtpResponseSchema.parse(response.data);
   } catch (error) {
-    console.error("Generate OTP API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Generate OTP API Error:", error);
+    }
     throw error;
   }
 };
@@ -47,7 +49,9 @@ export const verifyOTP = async (
           : undefined),
     });
   } catch (error) {
-    console.error("Verify OTP API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Verify OTP API Error:", error);
+    }
     throw error;
   }
 };

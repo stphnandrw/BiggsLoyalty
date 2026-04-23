@@ -135,7 +135,7 @@ export default function BookAppointment() {
   return (
     <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
-        <HeaderBigLogo hasBackButton={true} hasNotifications={false} />
+        <HeaderBigLogo hasBackButton={true} hasNotifications={false} hasPattern />
         <View className="w-full h-auto items-center justify-center mt-10 px-6">
           <Text className="text-gray-600 text-base mt-2 text-center font-kanit">
             {branchTitle}

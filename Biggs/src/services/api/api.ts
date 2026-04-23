@@ -7,8 +7,23 @@ type ApiErrorPayload = {
   };
 };
 
-export const baseApiUrl = "http://192.168.4.222:8080"; // Office
-// export const baseApiUrl = "http://192.168.0.58:8082"; // Home
+const DEV_FALLBACK_API_URL = "http://192.168.4.222:8080";
+
+function normalizeApiBaseUrl(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.replace(/\/+$/, "");
+}
+
+const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+console.log("[API] Raw API URL from env:", envApiUrl);
+
+const resolvedApiBaseUrl =
+  typeof envApiUrl === "string" && envApiUrl.trim() !== ""
+    ? envApiUrl
+    : DEV_FALLBACK_API_URL;
+
+export const baseApiUrl = normalizeApiBaseUrl(resolvedApiBaseUrl);
 
 export const api = axios.create({
   baseURL: baseApiUrl,
@@ -18,6 +33,21 @@ export const api = axios.create({
     Accept: "application/json",
   },
 });
+
+console.log("[API] baseURL:", baseApiUrl);
+
+// ✅ Interceptor on the api instance, not global axios
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<ApiErrorPayload>) => {
+    if (error.response?.status === 401) {
+      // redirect to login / clear auth state
+      console.warn("[API] Unauthorized — redirecting to login");
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export const handleApiError = (error: unknown): string => {
   if (isAxiosError(error)) {
@@ -35,17 +65,5 @@ export const handleApiError = (error: unknown): string => {
   return "Unexpected error occurred";
 };
 
-// api.interceptors.request.use(
-//   (config) => {
-//     const token = getAuthToken(); // Implement this function to retrieve the token from storage
-//     if (token) {
-//       config.headers["Authorization"] = `Bearer ${token}`;
-//     }
-
-//     return config;
-//   },
-//   (error) => {
-//     console.error("Request Interceptor Error:", error);
-//     return Promise.reject(error);
-//   },
-// );
+export const isNotFoundError = (error: unknown): boolean =>
+  isAxiosError(error) && error.response?.status === 404;

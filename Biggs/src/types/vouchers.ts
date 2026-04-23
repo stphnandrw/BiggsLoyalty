@@ -24,3 +24,9 @@ export type VoucherMutationPayload = {
   current_points?: number;
   remaining_points?: number;
 };
+
+export type VoucherRedemptionStatus = {
+  claimed_voucher_id: number;
+  status?: string;
+  redeemed_at?: string | null;
+};

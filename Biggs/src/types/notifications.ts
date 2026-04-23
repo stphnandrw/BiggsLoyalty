@@ -1,9 +1,17 @@
+export type NotificationType =
+  | "course"
+  | "assignment"
+  | "announcement"
+  | "reading"
+  | "achievement"
+  | "default";
+
 export type AppNotification = {
   notification_id: number;
   notification_recipient_id: number;
   title: string;
   body: string;
-  type: string;
+  type?: NotificationType;
   is_read: boolean;
   read_at: string | null;
   delivery_status: string;

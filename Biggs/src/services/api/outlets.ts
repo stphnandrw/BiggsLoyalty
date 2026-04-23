@@ -1,4 +1,4 @@
-import { api } from "@/src/services/api/api";
+import { api, isNotFoundError } from "@/src/services/api/api";
 import { parseDirectOrEnvelope } from "@/src/services/api/schemas/common";
 import { OutletListSchema } from "@/src/services/api/schemas/outlets";
 import type { Outlet } from "@/src/types";
@@ -12,6 +12,10 @@ export const getOutlets = async (): Promise<Outlet[]> => {
       endpointName: "getOutlets",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Outlets API Error:", error);
     throw error;
   }

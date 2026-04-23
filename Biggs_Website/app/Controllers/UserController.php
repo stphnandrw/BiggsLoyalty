@@ -7,12 +7,12 @@ class UserController extends BaseController
     public function getUserByTagUID()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'getUserByTagUID payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
 
         if (!$tagUid) {
-            log_message('error', 'Tag UID is missing');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required'
@@ -20,7 +20,7 @@ class UserController extends BaseController
         }
 
         $user = $this->userModel->where('tag_uid', $tagUid)->first();
-        log_message('debug', 'User query result: ' . json_encode($user));
+        
 
         if ($user) {
             return $this->response->setJSON([
@@ -33,7 +33,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('error', 'User not found: ' . $tagUid);
+        
         return $this->response->setStatusCode(404)->setJSON([
             'status' => 'error',
             'message' => 'User not found'
@@ -43,13 +43,13 @@ class UserController extends BaseController
     public function getUserByTagUidAndPhone()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
         $phoneNumber = $data->phone_number ?? null;
 
         if (!$tagUid || !$phoneNumber) {
-            log_message('error', 'Missing tag_uid or phone_number');
+            
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Tag UID and phone number are required']);
         }
 
@@ -58,15 +58,15 @@ class UserController extends BaseController
             ->where('phone_number', $phoneNumber)
             ->first();
 
-        log_message('debug', 'User found: ' . json_encode($user));
+        
 
         if (!$user) {
-            log_message('error', 'User not found');
+            
             return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
         }
 
         $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
-        log_message('debug', 'Loyalty points: ' . json_encode($loyaltyPoints));
+        
 
         return $this->response->setJSON(array_merge($user, [
             'loyalty_points' => $loyaltyPoints
@@ -76,35 +76,35 @@ class UserController extends BaseController
     public function getUserByPhoneNumber()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $phone_number = $data->phone_number ?? null;
 
         if (!$phone_number) {
-            log_message('error', 'Phone number missing');
+            
             return $this->response->setStatusCode(400)->setJSON(['message' => 'Phone number is required']);
         }
 
         $user = $this->userModel->where('phone_number', $phone_number)->first();
-        log_message('debug', 'User result: ' . json_encode($user));
+        
 
         if ($user) {
             return $this->response->setJSON($user);
         }
 
-        log_message('error', 'User not found for phone: ' . $phone_number);
+        
         return $this->response->setStatusCode(404)->setJSON(['message' => 'User not found']);
     }
 
     public function checkPhoneIfExist()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $phone_number = $data->phone_number ?? null;
 
         if (!$phone_number) {
-            log_message('error', 'Phone number is required');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Phone number is required',
@@ -115,7 +115,7 @@ class UserController extends BaseController
         }
 
         $user = $this->userModel->where('phone_number', $phone_number)->first();
-        log_message('debug', 'User lookup: ' . json_encode($user));
+        
 
         if (!$user) {
             return $this->response->setJSON([
@@ -132,10 +132,10 @@ class UserController extends BaseController
             ->orderBy('token_id', 'DESC')
             ->first();
 
-        log_message('debug', 'Latest token: ' . json_encode($latestUserToken));
+        
 
         if ($user['name'] === null || $user['birthday'] === null) {
-            log_message('debug', 'Incomplete user: ' . $user['tag_uid']);
+            
 
             return $this->response->setJSON([
                 'status' => 'success',
@@ -149,7 +149,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('debug', 'User complete: ' . $user['tag_uid']);
+        
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -171,12 +171,12 @@ class UserController extends BaseController
     public function getLoyaltyPoints()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
 
         if (!$tagUid) {
-            log_message('error', 'Tag UID missing');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required',
@@ -184,7 +184,7 @@ class UserController extends BaseController
         }
 
         $loyaltyPoints = $this->btcLoyaltyModel->getLoyaltyPoints($tagUid);
-        log_message('debug', 'Loyalty result: ' . json_encode($loyaltyPoints));
+        
 
         if ($loyaltyPoints) {
             return $this->response->setJSON([
@@ -194,7 +194,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('error', 'Loyalty not found');
+        
         return $this->response->setStatusCode(404)->setJSON([
             'status' => 'error',
             'message' => 'Loyalty points not found',
@@ -204,13 +204,13 @@ class UserController extends BaseController
     public function addFavoriteMenu()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
         $m_id = $data->m_id ?? null;
 
         if (!$tagUid || !$m_id) {
-            log_message('error', 'Missing tag_uid or m_id');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID and Menu ID are required'
@@ -218,7 +218,7 @@ class UserController extends BaseController
         }
 
         if (!$this->userModel->find($tagUid)) {
-            log_message('error', 'User not found: ' . $tagUid);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'User not found'
@@ -226,7 +226,7 @@ class UserController extends BaseController
         }
 
         if (!$this->menuModel->find($m_id)) {
-            log_message('error', 'Menu not found: ' . $m_id);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Menu item not found'
@@ -236,7 +236,7 @@ class UserController extends BaseController
         $menu_code = $this->menuModel->getMenuCodeById($m_id);
 
         if ($this->userModel->addFavoriteMenuByTagUid($tagUid, $menu_code)) {
-            log_message('debug', 'Menu added to favorites');
+            
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Menu added to favorites',
@@ -244,7 +244,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('error', 'Failed to add favorite menu');
+        
         return $this->response->setStatusCode(500)->setJSON([
             'status' => 'error',
             'message' => 'Failed to add menu'
@@ -254,13 +254,13 @@ class UserController extends BaseController
     public function addFavoriteLocation()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
         $branch_id = $data->branch_id ?? null;
 
         if (!$tagUid || !$branch_id) {
-            log_message('error', 'Missing tag_uid or branch_id');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID and Branch ID are required'
@@ -268,7 +268,7 @@ class UserController extends BaseController
         }
 
         if (!$this->userModel->find($tagUid)) {
-            log_message('error', 'User not found: ' . $tagUid);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'User not found'
@@ -276,7 +276,7 @@ class UserController extends BaseController
         }
 
         if (!$this->branchModel->find($branch_id)) {
-            log_message('error', 'Branch not found: ' . $branch_id);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Branch not found'
@@ -286,7 +286,7 @@ class UserController extends BaseController
         $branch_code = $this->branchModel->getBranchCodeById($branch_id);
 
         if ($this->userModel->addFavoriteLocationByTagUid($tagUid, $branch_code)) {
-            log_message('debug', 'Branch added to favorites');
+            
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Branch added to favorites',
@@ -294,7 +294,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('error', 'Failed to add favorite branch');
+        
         return $this->response->setStatusCode(500)->setJSON([
             'status' => 'error',
             'message' => 'Failed to add branch'
@@ -306,10 +306,10 @@ class UserController extends BaseController
         $data = $this->request->getJSON();
         $branch_code = $data->branch_code ?? null;
 
-        log_message('debug', 'Payload of getFavoriteBranchByCode: ' . json_encode($data));
+        
 
         if (!$branch_code || !is_string($branch_code)) {
-            log_message('error', 'Missing branch_code');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Branch code is required and must be a string'
@@ -319,7 +319,7 @@ class UserController extends BaseController
         $branch = $this->branchModel->getBranchByCode($branch_code);
 
         if (!$branch) {
-            log_message('error', 'Branch not found: ' . $branch_code);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Branch not found'
@@ -339,7 +339,7 @@ class UserController extends BaseController
         $tag_uid = $data->tag_uid ?? null;
 
         if (!$tag_uid) {
-            log_message('error', 'Missing tag_uid');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required'
@@ -349,7 +349,7 @@ class UserController extends BaseController
         $favoriteLocation = $this->userModel->getFavoriteLocationByTagUid($tag_uid);
 
         if (!$favoriteLocation) {
-            log_message('error', 'Favorite location not found for tag_uid: ' . $tag_uid);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Favorite location not found'
@@ -368,10 +368,10 @@ class UserController extends BaseController
         $data = $this->request->getJSON();
         $menu_code = $data->menu_code ?? null;
 
-        log_message('debug', 'Payload of getFavoriteMenuByCode: ' . json_encode($data));
+        
 
         if (!$menu_code || !is_string($menu_code)) {
-            log_message('error', 'Missing menu_code');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Menu code is required and must be a string'
@@ -381,7 +381,7 @@ class UserController extends BaseController
         $menu = $this->menuModel->getMenuByCode($menu_code);
 
         if (!$menu) {
-            log_message('error', 'Menu not found: ' . $menu_code);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Menu not found'
@@ -401,7 +401,7 @@ class UserController extends BaseController
         $tag_uid = $data->tag_uid ?? null;
 
         if (!$tag_uid) {
-            log_message('error', 'Missing tag_uid');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required'
@@ -411,7 +411,7 @@ class UserController extends BaseController
         $favoriteMenu = $this->userModel->getFavoriteMenuByTagUid($tag_uid);
 
         if (!$favoriteMenu) {
-            log_message('error', 'Favorite menu not found for tag_uid: ' . $tag_uid);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'Favorite menu not found'
@@ -428,12 +428,12 @@ class UserController extends BaseController
     public function updateUser()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Update payload: ' . json_encode($data));
+        
 
         $tag_uid = $data->tag_uid ?? null;
 
         if (!$tag_uid) {
-            log_message('error', 'Tag UID missing');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required'
@@ -456,14 +456,13 @@ class UserController extends BaseController
                     'tag_uid' => $tag_uid,
                     'expo_push_token' => $expoPushToken,
                 ]);
-                log_message('debug', 'New expo token saved');
             }
         }
 
         $user = $this->userModel->find($tag_uid);
 
         if (!$user) {
-            log_message('error', 'User not found: ' . $tag_uid);
+            
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
                 'message' => 'User not found'
@@ -471,7 +470,7 @@ class UserController extends BaseController
         }
 
         if (empty($updateData)) {
-            log_message('debug', 'Only token updated');
+            
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'User token updated',
@@ -480,7 +479,7 @@ class UserController extends BaseController
         }
 
         if ($this->userModel->update($tag_uid, $updateData)) {
-            log_message('debug', 'User updated successfully');
+            
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'User updated',
@@ -488,7 +487,7 @@ class UserController extends BaseController
             ]);
         }
 
-        log_message('error', 'Failed to update user');
+        
         return $this->response->setStatusCode(500)->setJSON([
             'status' => 'error',
             'message' => 'Failed to update user'
@@ -498,12 +497,12 @@ class UserController extends BaseController
     public function getNotificationRecipientsByTagUid()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
 
         if (!$tagUid) {
-            log_message('error', 'Tag UID missing');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required',
@@ -538,7 +537,7 @@ class UserController extends BaseController
             ],
         ];
 
-        log_message('debug', 'Notifications payload for tag_uid ' . $tagUid . ': ' . json_encode($payload));
+        
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -550,13 +549,13 @@ class UserController extends BaseController
     public function markNotificationAsRead()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Mark as read payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
         $notificationIds = $data->notification_ids ?? null;
 
         if (!$tagUid || !is_array($notificationIds)) {
-            log_message('error', 'Missing tag_uid or notification_ids');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID and notification IDs are required',
@@ -565,7 +564,7 @@ class UserController extends BaseController
 
         $updatedCount = $this->notificationRecipientModel->markAsRead($tagUid, $notificationIds);
 
-        log_message('debug', 'Marked as read count: ' . $updatedCount);
+        
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -580,12 +579,12 @@ class UserController extends BaseController
     public function markAllNotificationsAsRead()
     {
         $data = $this->request->getJSON();
-        log_message('debug', 'Mark all as read payload: ' . json_encode($data));
+        
 
         $tagUid = $data->tag_uid ?? null;
 
         if (!$tagUid) {
-            log_message('error', 'Tag UID missing');
+            
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Tag UID is required',
@@ -596,7 +595,7 @@ class UserController extends BaseController
         $notificationIds = array_map(static fn(array $row): int => (int) ($row['notification_id'] ?? 0), $recipientRows);
 
         if (empty($notificationIds)) {
-            log_message('debug', 'No notifications to mark as read for tag_uid: ' . $tagUid);
+            
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'No notifications to mark as read',
@@ -609,7 +608,7 @@ class UserController extends BaseController
 
         $updatedCount = $this->notificationRecipientModel->markAsRead($tagUid, $notificationIds);
 
-        log_message('debug', 'Marked all as read count: ' . $updatedCount);
+        
 
         return $this->response->setJSON([
             'status' => 'success',

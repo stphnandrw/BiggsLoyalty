@@ -6,6 +6,7 @@ interface ButtonProps {
   route?: any;
   icon?: any;
   buttonWidth?: any;
+  buttonHeight?: any;
   fontUsed?: any;
   isCentered?: boolean;
   isSticky?: boolean;
@@ -33,6 +34,7 @@ export function NormalButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   isCentered,
   onPress: customOnPress,
   isSticky,
@@ -64,6 +66,7 @@ export function PrimaryButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -79,6 +82,7 @@ export function PrimaryButton({
         className="bg-[#14284d] py-3 px-4 rounded-3xl border-8 border-saffron"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled ? 0.5 : 1,
         }}
         disabled={isDisabled}
@@ -101,6 +105,7 @@ export function MiniPrimaryButton({
   route,
   onPress: customOnPress,
   buttonWidth,
+  buttonHeight,
 }: ButtonProps) {
   return (
     <View className="w-full items-center">
@@ -148,6 +153,7 @@ export function WarningButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -164,6 +170,7 @@ export function WarningButton({
         className="bg-amber-400 py-3 px-4 rounded-3xl border-8 border-amber-600"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled || isLoading ? 0.5 : 1,
         }}
         disabled={isDisabled || isLoading}
@@ -229,6 +236,7 @@ export function DangerButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -245,6 +253,7 @@ export function DangerButton({
         className="bg-red-600 py-3 px-4 rounded-3xl border-8 border-red-900"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled || isLoading ? 0.5 : 1,
         }}
         disabled={isDisabled || isLoading}
@@ -310,6 +319,7 @@ export function SuccessButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -326,6 +336,7 @@ export function SuccessButton({
         className="bg-emerald-500 py-3 px-4 rounded-3xl border-8 border-emerald-800"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled || isLoading ? 0.5 : 1,
         }}
         disabled={isDisabled || isLoading}
@@ -391,6 +402,7 @@ export function InfoButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -407,6 +419,7 @@ export function InfoButton({
         className="bg-sky-500 py-3 px-4 rounded-3xl border-8 border-sky-800"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled || isLoading ? 0.5 : 1,
         }}
         disabled={isDisabled || isLoading}
@@ -472,6 +485,7 @@ export function GhostButton({
   route,
   icon,
   buttonWidth,
+  buttonHeight,
   fontUsed,
   isFontSmall,
   isCentered,
@@ -488,6 +502,7 @@ export function GhostButton({
         className="bg-transparent py-3 px-4 rounded-3xl border-8 border-gray-400"
         style={{
           width: buttonWidth,
+          height: buttonHeight,
           opacity: isDisabled || isLoading ? 0.4 : 1,
         }}
         disabled={isDisabled || isLoading}
@@ -513,6 +528,7 @@ export function MiniGhostButton({
   route,
   onPress: customOnPress,
   buttonWidth,
+  buttonHeight,
 }: ButtonProps) {
   return (
     <View className="w-full items-center">

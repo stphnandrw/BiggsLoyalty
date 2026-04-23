@@ -1,7 +1,6 @@
 import { VoucherPageContent } from "@/src/components/features/VoucherPageContent";
 import { HeaderBigLogo } from "@/src/components/layout/header";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
-import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { getRedeemedVouchers } from "@/src/services/api/vouchers";
 import type { ClaimedVoucher } from "@/src/types";
 import { getItem } from "@/src/utils/asyncStorage";
@@ -12,7 +11,6 @@ import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VoucherHistory() {
-  const { isLoggedIn } = useAuthStatus();
   const [tagUid, setTagUid] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -83,7 +81,7 @@ export default function VoucherHistory() {
   return (
     <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
-        <HeaderBigLogo hasBackButton hasNotifications isLoggedIn={isLoggedIn} />
+        <HeaderBigLogo hasBackButton hasLogo title="Redeemed History" />
 
         {loading ? (
           <LoadingOverlay />

@@ -57,29 +57,76 @@ export default function VoucherDetails() {
 
   const isRedeemed = useMemo(() => Boolean(redeemedAt), [redeemedAt]);
 
-  const checkPendingRedemption = async () => {
-    if (!tagUid) {
-      return;
-    }
-    const pendingRedemption = await checkOnProcessVoucher(
-      tagUid,
-      Number(claimedVoucherId),
-    );
-    if (pendingRedemption) {
-      setIsWaitingForNfc(true);
-      setStatusMessage("Waiting for NFC tap...");
-    }
-  };
-
   useEffect(() => {
+    const checkPendingRedemption = async () => {
+      if (!tagUid) {
+        return;
+      }
+
+      const pendingRedemption = await checkOnProcessVoucher(
+        tagUid,
+        Number(claimedVoucherId),
+      );
+
+      console.log("Checked pending redemption:", pendingRedemption);
+
+      if (pendingRedemption?.status === "pending") {
+        setIsWaitingForNfc(true);
+        setStatusMessage("Waiting for NFC tap...");
+      }
+    };
     checkPendingRedemption();
   }, [tagUid, claimedVoucherId]);
+
+  useEffect(() => {
+    if (!isWaitingForNfc || !tagUid || !claimedVoucherId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const pollVoucherStatus = async () => {
+      try {
+        const voucherStatus = await checkOnProcessVoucher(
+          tagUid,
+          Number(claimedVoucherId),
+        );
+
+        if (isCancelled || !voucherStatus) {
+          return;
+        }
+
+        if (voucherStatus.status === "redeemed" || voucherStatus.redeemed_at) {
+          setIsWaitingForNfc(false);
+          setStatusMessage("Voucher redeemed successfully.");
+          return;
+        }
+
+        if (voucherStatus.status === "active") {
+          setIsWaitingForNfc(false);
+          setStatusMessage("Redemption cancelled.");
+          return;
+        }
+
+        setStatusMessage("Waiting for NFC tap...");
+      } catch (error) {
+        console.error("Failed to poll voucher redemption status:", error);
+      }
+    };
+
+    pollVoucherStatus();
+    const intervalId = setInterval(pollVoucherStatus, 2000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [isWaitingForNfc, tagUid, claimedVoucherId]);
 
   const handleRedeem = async () => {
     if (!claimedVoucherId || isWaitingForNfc) {
       return;
     }
-
     await redeemVoucher(tagUid, Number(claimedVoucherId));
 
     setStatusMessage("Waiting for NFC tap...");
@@ -163,6 +210,7 @@ export default function VoucherDetails() {
         <HeaderBigLogo
           hasBackButton={true}
           hasNotifications={false}
+          hasPattern
           onBackPress={() => openLeaveConfirmSheet("back")}
         />
 
@@ -175,7 +223,7 @@ export default function VoucherDetails() {
             />
           }
         >
-          <View className="w-full h-auto items-center justify-center mt-16 px-6">
+          <View className="w-full h-auto items-center justify-center mt-3 px-6">
             <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase text-center">
               {voucherName}
             </Text>

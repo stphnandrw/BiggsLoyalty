@@ -78,7 +78,7 @@ export default function ScheduledEvents() {
   return (
     <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
-        <HeaderBigLogo hasBackButton={true} hasNotifications={false} />
+        <HeaderBigLogo hasBackButton={true} hasNotifications={false} hasPattern/>
         <View className="w-full h-auto items-center justify-center mt-16">
           <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
             Scheduled Events

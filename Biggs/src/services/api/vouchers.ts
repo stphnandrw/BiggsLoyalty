@@ -1,4 +1,4 @@
-﻿import { api } from "@/src/services/api/api";
+﻿import { api, handleApiError, isNotFoundError } from "@/src/services/api/api";
 import { parseDirectOrEnvelope } from "@/src/services/api/schemas/common";
 import {
   ClaimedVoucherListSchema,
@@ -10,6 +10,7 @@ import type {
   ClaimedVoucher,
   Voucher,
   VoucherMutationPayload,
+  VoucherRedemptionStatus,
 } from "@/src/types";
 
 const normalizeVoucherMutationResponse = (
@@ -52,6 +53,10 @@ export const getClaimedVouchers = async (
       endpointName: "getClaimedVouchers",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get User Claimed Vouchers API Error:", error);
     throw error;
   }
@@ -70,6 +75,10 @@ export const getAvailableVouchers = async (
       endpointName: "getAvailableVouchers",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get Available Vouchers API Error:", error);
     throw error;
   }
@@ -88,6 +97,10 @@ export const getRedeemedVouchers = async (
       endpointName: "getRedeemedVouchers",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get Redeemed Vouchers API Error:", error);
     throw error;
   }
@@ -104,7 +117,9 @@ export const claimVoucher = async (
     });
     return normalizeVoucherMutationResponse(response.data);
   } catch (error) {
-    console.error("Claim Voucher API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Claim Voucher API Error:", error);
+    }
     throw error;
   }
 };
@@ -126,7 +141,9 @@ export const redeemVoucher = async (
     });
     return normalizeVoucherMutationResponse(response.data);
   } catch (error) {
-    console.error("Redeem Voucher API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Redeem Voucher API Error:", error);
+    }
     throw error;
   }
 };
@@ -142,7 +159,9 @@ export const cancelVoucherRedemption = async (
     });
     return normalizeVoucherMutationResponse(response.data);
   } catch (error) {
-    console.error("Cancel Voucher Redemption API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Cancel Voucher Redemption API Error:", error);
+    }
     throw error;
   }
 };
@@ -150,7 +169,7 @@ export const cancelVoucherRedemption = async (
 export const checkOnProcessVoucher = async (
   tag_uid: string,
   claimed_voucher_id: number,
-): Promise<VoucherMutationPayload | null> => {
+): Promise<VoucherRedemptionStatus | null> => {
   try {
     const response = await api.post(`/user/checkSelectedVoucher`, {
       tag_uid,
@@ -159,9 +178,28 @@ export const checkOnProcessVoucher = async (
     const parsed = VoucherMutationResponseSchema.parse(response.data);
     console.log("Check On Process Voucher API Response:", parsed);
 
-    return parsed.data ?? null;
+    if (!parsed.data) {
+      return null;
+    }
+
+    return {
+      claimed_voucher_id: Number(
+        (parsed.data as Record<string, unknown>).claimed_voucher_id ??
+          claimed_voucher_id,
+      ),
+      status: (parsed.data as Record<string, unknown>).status as
+        | string
+        | undefined,
+      redeemed_at: ((parsed.data as Record<string, unknown>).redeemed_at ??
+        null) as string | null,
+    };
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+
     console.error("Check On Process Voucher API Error:", error);
+    handleApiError(error);
     throw error;
   }
 };

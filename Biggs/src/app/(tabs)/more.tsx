@@ -2,16 +2,17 @@ import { HeaderBigLogo } from "@/src/components/layout/header";
 import { MiniPrimaryButton } from "@/src/components/ui/Buttons";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { getBookingCountByTagUid } from "@/src/services/api/bookings";
+import { getNotificationRecipientsByTagUid } from "@/src/services/api/notifications";
 import {
-    getFavoriteBranchByCode,
-    getFavoriteLocationByTagUid,
-    getFavoriteMenuByCode,
-    getFavoriteMenuByTagUid,
+  getFavoriteBranchByCode,
+  getFavoriteLocationByTagUid,
+  getFavoriteMenuByCode,
+  getFavoriteMenuByTagUid,
 } from "@/src/services/api/user";
 import { getItem } from "@/src/utils/asyncStorage";
 import {
-    setFavoriteBranchSelectionMode,
-    setFavoriteMenuItemSelectionMode,
+  setFavoriteBranchSelectionMode,
+  setFavoriteMenuItemSelectionMode,
 } from "@/src/utils/favoriteBranch";
 import { parseAndRemoveOtherLines } from "@/src/utils/htmlParser";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -25,6 +26,7 @@ export default function Profile() {
   const [user, setUser] = useState<any>(null);
   const [favoriteBranch, setFavoriteBranch] = useState<any>(null);
   const [favoriteMenuItem, setFavoriteMenuItem] = useState<any>(null);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
   const [pendingBookingCount, setPendingBookingCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -107,6 +109,19 @@ export default function Profile() {
             console.error("Failed to fetch booking count:", error);
             setBookingCountError(true);
             setPendingBookingCount(0);
+          }
+
+          // Load Notification count
+          try {
+            // Placeholder for actual notification count fetching logic
+            const payload = await getNotificationRecipientsByTagUid(
+              parsedUser.tag_uid,
+            );
+
+            setNotificationCount(payload.unread_count);
+          } catch (error) {
+            console.error("Failed to fetch notification count:", error);
+            setNotificationCount(0);
           }
         } else {
           setFavoriteBranch(null);
@@ -251,29 +266,13 @@ export default function Profile() {
       edges={["top", "left", "right"]}
     >
       <View className="w-full h-full bg-white">
-        <HeaderBigLogo hasLogout useConfirmation />
+        <HeaderBigLogo hasLogout useConfirmation hasPattern />
 
         {isLoading ? (
           <LoadingOverlay />
         ) : (
           <>
-            <View className="w-full h-12 flex-row overflow-visible items-center justify-center ">
-              {[1, 2, 3, 4, 5].map((_, i) => (
-                <View
-                  key={i}
-                  className={`${i % 2 === 0 ? "rotate-180" : ""}`}
-                  style={{ width: 100 }}
-                >
-                  <Image
-                    source={require("../../../assets/images/blue_checker.png")}
-                    style={{ width: "100%", height: 30 }}
-                    contentFit="cover"
-                  />
-                </View>
-              ))}
-            </View>
-
-            <View className="w-full h-full p-4 gap-4">
+            <View className="w-full h-full p-4 gap-4 z-10">
               {/* Group 1: Navigation items */}
               <View className="bg-white rounded-2xl  border border-gray-100 overflow-hidden">
                 <ItemWithButton
@@ -367,14 +366,39 @@ export default function Profile() {
                 )}
 
                 <ProfileMenuItem
+                  icon="notifications-outline"
+                  label="Notifications"
+                  hasChevron
+                  count={notificationCount}
+                  onPress={() => router.push("/(notifications)/notifications")}
+                />
+
+                <ProfileMenuItem
                   icon="receipt-outline"
                   label="Scheduled Events"
+                  hasChevron
                   count={pendingBookingCount}
                   onPress={() => router.push("/(more)/scheduled-events")}
                 />
+
                 <ProfileMenuItem
                   icon="settings-outline"
                   label="Settings"
+                  hasChevron
+                  onPress={() => router.push("/(more)/settings")}
+                />
+
+                <ProfileMenuItem
+                  icon="help-circle-outline"
+                  label="Need Help?"
+                  isCentered
+                  onPress={() => router.push("/(more)/settings")}
+                />
+
+                <ProfileMenuItem
+                  icon="cash-outline"
+                  label="Partner With Us"
+                  isCentered
                   onPress={() => router.push("/(more)/settings")}
                 />
               </View>
@@ -388,13 +412,13 @@ export default function Profile() {
               />
             </View>
 
-            <View className="absolute bottom-10 left-40 w-full overflow-hidden">
+            {/* <View className="absolute bottom-10 left-40 w-full overflow-hidden">
               <Image
                 source={require("../../../assets/images/cat1.png")}
                 style={{ width: 250, height: 180 }}
                 contentFit="contain"
               />
-            </View>
+            </View> */}
           </>
         )}
       </View>
@@ -410,17 +434,21 @@ function ProfileMenuItem({
   onPress,
   count,
   danger = false,
+  hasChevron,
+  isCentered,
 }: {
   icon: any;
   label: string;
   onPress: () => void;
   count?: number;
   danger?: boolean;
+  hasChevron?: boolean;
+  isCentered?: boolean;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex-row items-center py-4 px-3"
+      className={`flex-row items-center py-4 px-3 ${isCentered ? "justify-center" : ""}`}
       activeOpacity={0.65}
     >
       <Ionicons name={icon} size={22} color={danger ? "#e74c3c" : "#3db5e7"} />
@@ -440,7 +468,9 @@ function ProfileMenuItem({
         </View>
       )}
 
-      {!danger && <Ionicons name="chevron-forward" size={20} color="#ccc" />}
+      {!danger && hasChevron && (
+        <Ionicons name="chevron-forward" size={20} color="#ccc" />
+      )}
     </TouchableOpacity>
   );
 }

@@ -2,6 +2,7 @@ import { HeaderBigLogo } from "@/src/components/layout/header";
 import { PrimaryButton, SmallPrimaryButton } from "@/src/components/ui/Buttons";
 import { ProductCard } from "@/src/components/ui/Cards";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
+import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { getAllMenu } from "@/src/services/api/menu";
 import {
   addFavoriteMenu,
@@ -150,6 +151,7 @@ const getNormalizedposition = (item: MenuItem) => {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function FavoriteMenu() {
+  const { isLoggedIn } = useAuthStatus();
   const params = useLocalSearchParams<{ mode?: string | string[] }>();
   const [lastSuccessfulMenu, setLastSuccessfulMenu] = useState<MenuItem[]>([]);
   const [favoriteMenuCode, setFavoriteMenuCode] = useState<string | null>(null);
@@ -518,10 +520,10 @@ export default function FavoriteMenu() {
   return (
     <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full flex-1 bg-white">
-        <HeaderBigLogo hasNotifications={false} />
+        <HeaderBigLogo hasNotifications={isLoggedIn} hasPattern hasPointsDisplay/>
 
         {/* SEARCH BAR */}
-        <View className="px-4 py-3 mt-16">
+        <View className="px-4 py-3">
           <TextInput
             placeholder="Search menu items..."
             placeholderTextColor="#999"

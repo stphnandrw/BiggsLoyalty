@@ -2,7 +2,7 @@
 import { SearchInput } from "@/src/components/ui/Inputs";
 import type { ClaimedVoucher, VoucherListItem } from "@/src/types";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { RefreshControl, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 type VoucherPageContentProps = {
@@ -11,11 +11,10 @@ type VoucherPageContentProps = {
   vouchers: VoucherListItem[];
   claimedVoucherIds: number[];
   emptyMessage: string;
+  swipeDirection?: string;
   onViewVoucher: (voucher: VoucherListItem) => void;
   onToggleClaim: (voucherId: number, isClaimed: boolean) => void;
   scope: "all" | "claimed" | "history";
-  isRefetching?: boolean;
-  onRefresh?: () => void;
 };
 
 function getVoucherCardKey(
@@ -41,13 +40,13 @@ export function VoucherPageContent({
   claimedVoucherIds,
   emptyMessage,
   onViewVoucher,
+  swipeDirection,
   onToggleClaim,
   scope,
-  isRefetching = false,
-  onRefresh,
 }: VoucherPageContentProps) {
-  const swipeDirection = "right";
 
+  console.log("Claimed Voucher IDs:", claimedVoucherIds);
+  console.log("On Toggle Claim called with voucherId:", vouchers.map(v => v.voucher_id));
   return (
     <View className="flex-1">
       <SearchInput
@@ -56,14 +55,7 @@ export function VoucherPageContent({
         onChangeText={onSearchChange}
         icon={<FontAwesome6 name="magnifying-glass" size={20} color="gray" />}
       />
-      <ScrollView
-        className="w-full flex-1"
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
-          ) : undefined
-        }
-      >
+      <ScrollView className="w-full flex-1">
         <View className="items-center">
           {vouchers.length > 0 ? (
             vouchers.map((voucher, index) => (
@@ -74,11 +66,6 @@ export function VoucherPageContent({
                 description={voucher.description}
                 required_points={voucher.required_points}
                 image_url={voucher.image_url}
-                isRedeemed={
-                  isClaimedVoucher(voucher)
-                    ? Boolean(voucher.redeemed_at)
-                    : false
-                }
                 isFavorited={claimedVoucherIds.includes(voucher.voucher_id)}
                 swipeDirection={swipeDirection}
                 onToggleFavorite={() =>

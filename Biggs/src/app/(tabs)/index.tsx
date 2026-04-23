@@ -12,7 +12,7 @@ import { useAuthStatus } from "@/src/hooks/useAuthStatus";
 import { baseApiUrl } from "@/src/services/api/api";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -128,7 +128,7 @@ export default function Home() {
       edges={["top", "left", "right"]}
     >
       <View className="flex-1 w-full bg-dirtyWhite">
-        <HeaderBigLogo hasNotifications isLoggedIn={isLoggedIn} />
+        <HeaderBigLogo hasNotifications isLoggedIn={isLoggedIn} hasPointsDisplay/>
         <ScrollView
           className="flex-1 w-full"
           refreshControl={

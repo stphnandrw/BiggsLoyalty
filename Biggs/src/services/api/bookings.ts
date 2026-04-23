@@ -1,4 +1,4 @@
-﻿import { api } from "@/src/services/api/api";
+﻿import { api, isNotFoundError } from "@/src/services/api/api";
 import {
   BookingCancelResultSchema,
   BookingCountSchema,
@@ -16,7 +16,6 @@ import type {
   CreateBookingPayload,
   CreateBookingResult,
 } from "@/src/types";
-
 export type {
   BookingCancelResult,
   BookingPackage,
@@ -37,6 +36,10 @@ export const getBranchPackages = async (
       endpointName: "getBranchPackages",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get Branch Packages API Error:", error);
     throw error;
   }
@@ -54,6 +57,10 @@ export const getAvailableBookingSlots = async (
       endpointName: "getAvailableBookingSlots",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get Booking Slots API Error:", error);
     throw error;
   }
@@ -73,7 +80,9 @@ export const createBooking = async (
       booking_id: bookingId,
     };
   } catch (error) {
-    console.error("Create Booking API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Create Booking API Error:", error);
+    }
     throw error;
   }
 };
@@ -89,6 +98,10 @@ export const getMyBookings = async (
       endpointName: "getMyBookings",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return [];
+    }
+
     console.error("Get My Bookings API Error:", error);
     throw error;
   }
@@ -102,7 +115,9 @@ export const cancelBooking = async (
     const response = await api.post("/booking/cancel", { booking_id, tag_uid });
     return BookingCancelResultSchema.parse(response.data);
   } catch (error) {
-    console.error("Cancel Booking API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Cancel Booking API Error:", error);
+    }
     throw error;
   }
 };
@@ -120,6 +135,10 @@ export const getBookingCountByTagUid = async (
 
     return parsed.booking_count;
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return 0;
+    }
+
     console.error("Get Booking Count API Error:", error);
     throw error;
   }

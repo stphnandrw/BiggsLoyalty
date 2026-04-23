@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { Dimensions, Image, Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-    Extrapolation,
-    interpolate,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 const { width: PAGE_WIDTH } = Dimensions.get("window");
@@ -34,7 +34,7 @@ interface CardProps {
   isRedeemed?: boolean;
   isFavorited?: boolean;
   /** "right" = Biggs Vouchers (like), "left" = Liked Vouchers (unlike) */
-  swipeDirection?: "left" | "right";
+  swipeDirection?: string;
   onPress?: () => void;
   onToggleFavorite?: () => void;
 }
@@ -63,6 +63,8 @@ export function GiftCard({
   onPress,
   onToggleFavorite,
 }: CardProps) {
+  const swipeEnabled = swipeDirection === "left" || swipeDirection === "right";
+
   const formattedPoints =
     typeof required_points === "number"
       ? required_points.toLocaleString()
@@ -139,6 +141,7 @@ export function GiftCard({
 
   // â”€â”€ Pan gesture (updates animations while the user is actively dragging) â”€â”€â”€
   const panGesture = Gesture.Pan()
+    .enabled(swipeEnabled)
     .activeOffsetX([-12, 12])
     .failOffsetY([-8, 8]) // Prevent vertical drags from activating the gesture
     .onUpdate((e) => {
@@ -238,7 +241,7 @@ export function GiftCard({
         className="absolute inset-0 flex-row justify-between items-center px-5 rounded-[18px]"
         pointerEvents="none"
       >
-        {swipeDirection !== "right" ? (
+        {swipeEnabled && swipeDirection !== "right" ? (
           <Animated.View
             style={leftHintStyle}
             className="flex-row items-center gap-1"
@@ -252,7 +255,7 @@ export function GiftCard({
           <View />
         )}
 
-        {swipeDirection !== "left" && (
+        {swipeEnabled && swipeDirection !== "left" && (
           <Animated.View
             style={rightHintStyle}
             className="flex-row items-center gap-1"

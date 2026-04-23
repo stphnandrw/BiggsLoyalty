@@ -6,13 +6,25 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.4.222:8080",
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "pk.eyJ1IjoibWVpY2UwMDIiLCJhIjoiY21tMGNpdWpoMGVucjNkczk3bm1wNHFyZiJ9.xA2hrh9rSNwzK4AfwO2JHA"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.4.222:8080",
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "pk.eyJ1IjoibWVpY2UwMDIiLCJhIjoiY21tMGNpdWpoMGVucjNkczk3bm1wNHFyZiJ9.xA2hrh9rSNwzK4AfwO2JHA"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.4.222:8080",
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "pk.eyJ1IjoibWVpY2UwMDIiLCJhIjoiY21tMGNpdWpoMGVucjNkczk3bm1wNHFyZiJ9.xA2hrh9rSNwzK4AfwO2JHA"
+      }
     }
   },
   "submit": {

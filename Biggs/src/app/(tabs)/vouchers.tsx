@@ -14,7 +14,14 @@ import { getItem } from "@/src/utils/asyncStorage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Text, View } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import PagerView from "react-native-pager-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -78,7 +85,6 @@ export default function Vouchers() {
     data: claimedVouchers = [],
     isLoading: isLoadingClaimed,
     refetch: refetchClaimedVouchers,
-    isRefetching,
   } = useQuery({
     queryKey: ["claimedVouchers", tagUid],
     queryFn: () => getClaimedVouchers(tagUid as string),
@@ -86,6 +92,7 @@ export default function Vouchers() {
   });
 
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
 
   const { mutate: claim } = useMutation({
     mutationFn: ({
@@ -129,11 +136,18 @@ export default function Vouchers() {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([
-      refetchLoyalty(),
-      refetchAllVouchers(),
-      refetchClaimedVouchers(),
-    ]);
+    if (isRefreshingAll) return;
+
+    setIsRefreshingAll(true);
+    try {
+      await Promise.all([
+        refetchLoyalty(),
+        refetchAllVouchers(),
+        refetchClaimedVouchers(),
+      ]);
+    } finally {
+      setIsRefreshingAll(false);
+    }
   };
 
   const handleTabPress = (index: number) => {
@@ -197,21 +211,33 @@ export default function Vouchers() {
     <SafeAreaView className="flex-1 bg-black" edges={["top", "left", "right"]}>
       <View className="w-full h-full bg-white">
         <HeaderBigLogo
-          hasNotifications
+          hasNotifications={isLoggedIn}
           hasHistory
-          isLoggedIn={isLoggedIn}
+          hasPattern
           onHistoryPress={() => router.push("/(vouchers)/voucher-history")}
         />
 
         {isLoading ? (
           <LoadingOverlay />
         ) : (
-          <>
-            <View className="w-full items-center justify-center mt-16">
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ flexGrow: 1 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshingAll}
+                onRefresh={() => {
+                  void handleRefresh();
+                }}
+              />
+            }
+          >
+            <View className="w-full items-center justify-center mt-3">
               <Text className="text-darkBlue text-2xl leading-none font-kanitMedium uppercase">
                 Total Points
               </Text>
             </View>
+
             {isLoadingLoyalty ? (
               <LoadingOverlay />
             ) : (
@@ -242,6 +268,7 @@ export default function Vouchers() {
                   vouchers={filteredAllVouchers}
                   claimedVoucherIds={claimedVoucherIds}
                   emptyMessage="No vouchers available at the moment."
+                  swipeDirection="right"
                   onViewVoucher={(voucher) =>
                     openVoucherDetails(voucher, false)
                   }
@@ -250,8 +277,6 @@ export default function Vouchers() {
                     claim({ voucher_id, isClaimed: isFavorite });
                   }}
                   scope="all"
-                  isRefetching={isRefetching}
-                  onRefresh={handleRefresh}
                 />
               </View>
 
@@ -265,12 +290,10 @@ export default function Vouchers() {
                   onViewVoucher={(voucher) => openVoucherDetails(voucher, true)}
                   onToggleClaim={() => {}}
                   scope="claimed"
-                  isRefetching={isRefetching}
-                  onRefresh={handleRefresh}
                 />
               </View>
             </PagerView>
-          </>
+          </ScrollView>
         )}
       </View>
     </SafeAreaView>

@@ -1,5 +1,6 @@
 import { ConfirmBottomSheet } from "@/src/components/ui/Modal";
 import { getNotificationRecipientsByTagUid } from "@/src/services/api/notifications";
+import { getLoyaltyPoints } from "@/src/services/api/user";
 import { getItem, logout } from "@/src/utils/asyncStorage";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,9 @@ type HeaderProps = {
   useConfirmation?: boolean;
   confirmTitle?: string;
   confirmDescription?: string;
+  hasLogo?: boolean;
+  hasPattern?: boolean;
+  hasPointsDisplay?: boolean;
 };
 
 const doLogout = () => {
@@ -40,6 +44,7 @@ export default function Header() {
 }
 
 export function HeaderBigLogo({
+  title,
   hasBackButton,
   hasNotifications,
   hasHistory,
@@ -48,6 +53,9 @@ export function HeaderBigLogo({
   onBackPress,
   onHistoryPress,
   useConfirmation,
+  hasLogo,
+  hasPattern,
+  hasPointsDisplay,
   confirmTitle = "Are you sure?",
   confirmDescription = "Any unsaved changes will be lost.",
 }: HeaderProps) {
@@ -74,10 +82,10 @@ export function HeaderBigLogo({
       }
     };
 
-    if (hasNotifications && isLoggedIn !== false) {
+    if (hasNotifications !== false) {
       void loadTagUid();
     }
-  }, [hasNotifications, isLoggedIn]);
+  }, [hasNotifications]);
 
   const unreadQuery = useQuery({
     queryKey: ["notificationsUnread", tagUid],
@@ -85,8 +93,18 @@ export function HeaderBigLogo({
       const payload = await getNotificationRecipientsByTagUid(tagUid);
       return payload.unread_count;
     },
-    enabled: !!tagUid && !!hasNotifications && isLoggedIn !== false,
+    enabled: !!tagUid && !!hasNotifications !== false,
     refetchInterval: 60_000,
+  });
+
+  const {
+    data: loyaltyData,
+    isLoading: isLoadingLoyalty,
+    refetch: refetchLoyalty,
+  } = useQuery({
+    queryKey: ["loyaltyPoints", tagUid],
+    queryFn: () => getLoyaltyPoints(tagUid as string),
+    enabled: !!tagUid,
   });
 
   const triggerAction = (action: "back" | "logout") => {
@@ -144,87 +162,131 @@ export function HeaderBigLogo({
     : confirmLabels.back;
 
   return (
-    <View
-      className="w-full h-16 items-center z-10"
-      style={{ overflow: "visible" }}
-    >
-      {/* Blue background bar */}
+    <>
       <View
-        className={`w-full flex-row ${hasBackButton || hasHistory ? "justify-between" : "justify-end"} items-center bg-lightBlue absolute top-0 h-16 px-7`}
+        className="w-full h-16 items-center z-10"
+        style={{ overflow: "visible" }}
       >
-        {hasBackButton && (
-          <Pressable onPress={() => triggerAction("back")}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </Pressable>
-        )}
+        {/* Blue background bar */}
+        <View
+          className={`w-full flex-row ${hasBackButton || hasHistory || hasPointsDisplay ? "justify-between" : "justify-end"} items-center bg-lightBlue absolute top-0 h-16 px-7`}
+        >
+          {hasPointsDisplay && (
+            <View className="flex-row items-center gap-1 bg-white/20 px-3 py-1 rounded-full -m-3">
+              <Text className="text-white text-2xl leading-none font-kanitMedium">
+                {loyaltyData?.points ?? "0"}
+              </Text>
+              <Text className="text-white text-xl leading-none font-kanitMedium">
+                pts
+              </Text>
+            </View>
+          )}
 
-        {hasHistory && (
-          <Pressable
-            onPress={
-              onHistoryPress ??
-              (() => router.push("/(vouchers)/voucher-history"))
-            }
-          >
-            <MaterialCommunityIcons name="history" size={30} color="white" />
-          </Pressable>
-        )}
+          {hasBackButton && (
+            <View className="flex-row items-center gap-4">
+              <Pressable onPress={() => triggerAction("back")}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </Pressable>
 
-        <View className="flex-row items-center gap-4">
-          {hasNotifications && isLoggedIn !== false && (
+              {title ? (
+                <Text className="text-white text-3xl leading-none font-kanitMedium">
+                  {title}
+                </Text>
+              ) : null}
+            </View>
+          )}
+
+          {hasHistory && (
             <Pressable
-              onPress={() => router.push("/(notifications)/notifications")}
-              className="relative"
+              onPress={
+                onHistoryPress ??
+                (() => router.push("/(vouchers)/voucher-history"))
+              }
             >
-              <Ionicons name="notifications-outline" size={32} color="white" />
-              {(unreadQuery.data ?? 0) > 0 && (
-                <View className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 items-center justify-center">
-                  <Text className="text-white text-[10px] font-kanitMedium leading-none">
-                    {Math.min(unreadQuery.data ?? 0, 99)}
-                  </Text>
-                </View>
-              )}
+              <MaterialCommunityIcons name="history" size={30} color="white" />
             </Pressable>
           )}
 
-          {hasLogout && (
-            <Pressable onPress={() => triggerAction("logout")}>
-              <MaterialCommunityIcons name="logout" size={32} color="white" />
-            </Pressable>
-          )}
+          <View className="flex-row items-center gap-4">
+            {hasNotifications ? (
+              <Pressable
+                onPress={() => router.push("/(notifications)/notifications")}
+                className="relative"
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  size={32}
+                  color="white"
+                />
+                {(unreadQuery.data ?? 0) > 0 && (
+                  <View className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 items-center justify-center">
+                    <Text className="text-white text-[10px] font-kanitMedium leading-none">
+                      {Math.min(unreadQuery.data ?? 0, 99)}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            ) : null}
+
+            {hasLogout && (
+              <Pressable onPress={() => triggerAction("logout")}>
+                <MaterialCommunityIcons name="logout" size={32} color="white" />
+              </Pressable>
+            )}
+          </View>
         </View>
-      </View>
 
-      {/* Logo — overflows below the blue bar intentionally */}
-      <View
-        style={{
-          position: "absolute",
-          top: 8,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.25,
-          shadowRadius: 6,
-          elevation: 10,
-        }}
-      >
-        <Image
-          source={require("../../../assets/images/biggs-logo.png")}
-          style={{ width: 200, height: 100 }}
-          contentFit="contain"
-        />
-      </View>
+        {/* Logo — overflows below the blue bar intentionally */}
+        {!hasLogo ? (
+          <View
+            style={{
+              position: "absolute",
+              top: 8,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 10,
+            }}
+          >
+            <Image
+              source={require("../../../assets/images/biggs-logo.png")}
+              style={{ width: 200, height: 100 }}
+              contentFit="contain"
+            />
+          </View>
+        ) : null}
 
-      {useConfirmation && (
-        <ConfirmBottomSheet
-          visible={confirmVisible}
-          title={activeLabels.title}
-          description={activeLabels.description}
-          confirmLabel={activeLabels.confirm}
-          cancelLabel={activeLabels.cancel}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
+        {useConfirmation && (
+          <ConfirmBottomSheet
+            visible={confirmVisible}
+            title={activeLabels.title}
+            description={activeLabels.description}
+            confirmLabel={activeLabels.confirm}
+            cancelLabel={activeLabels.cancel}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        )}
+      </View>
+      {hasPattern && (
+        <View className="w-full h-12 flex-row overflow-visible items-center justify-center ">
+          {[1, 2, 3, 4, 5].map((_, i) => (
+            <View
+              key={i}
+              className={`${i % 2 === 0 ? "rotate-180" : ""}`}
+              style={{ width: 100 }}
+            >
+              <Image
+                source={require("../../../assets/images/blue_checker.png")}
+                style={{ width: "100%", height: 30 }}
+                contentFit="cover"
+              />
+            </View>
+          ))}
+        </View>
       )}
-    </View>
+    </>
   );
 }
 

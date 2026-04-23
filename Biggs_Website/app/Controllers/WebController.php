@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 class WebController extends BaseController
 {
-    private function renderPage(string $pageView, array $data = []): string
+    private function renderPage(string|array $pageViews, array $data = []): string
     {
         $sharedData = array_merge([
             'footerText' => 'Biggs Loyalty. All rights reserved.',
@@ -16,15 +16,26 @@ class WebController extends BaseController
             'shortName' => $this->shortName,
         ], $data);
 
+        $pageContent = '';
+        if (is_array($pageViews)) {
+            foreach ($pageViews as $view) {
+                $pageContent .= view($view, $sharedData);
+            }
+        } else {
+            $pageContent = view($pageViews, $sharedData);
+        }
+
         return view('Templates/Header', $sharedData)
             . view('Templates/Navbar', $sharedData)
-            . view($pageView, $sharedData)
+            . $pageContent
             . view('Templates/Footer', $sharedData);
     }
 
     public function manager(): string
     {
-        return $this->renderPage('Notification/manager', [
+        $this->checkSession();
+
+        return $this->renderPage('Pages/ManageNotifications', [
             'title' => 'Notification Manager | Biggs Website',
             'activeNav' => 'notification_manager',
         ]);
@@ -63,9 +74,19 @@ class WebController extends BaseController
     }
 
     public function bookings(): string
-    {
+    {        
         return $this->renderPage('Pages/ManageBookings', [
             'title' => 'Bookings | Biggs Website',
+            'activeNav' => 'views',
+        ]);
+    }
+
+    public function packages(): string
+    {
+        $this->checkSession();
+        
+        return $this->renderPage('Pages/ManagePackages', [
+            'title' => 'Packages | Biggs Website',
             'activeNav' => 'views',
         ]);
     }

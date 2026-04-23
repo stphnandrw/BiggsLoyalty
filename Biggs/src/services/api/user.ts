@@ -1,4 +1,4 @@
-import { api } from "@/src/services/api/api";
+import { api, isNotFoundError } from "@/src/services/api/api";
 import { parseDirectOrEnvelope } from "@/src/services/api/schemas/common";
 import { MenuItemSchema } from "@/src/services/api/schemas/menu";
 import { LoyaltyPointsSchema } from "@/src/services/api/schemas/user";
@@ -31,7 +31,9 @@ export const checkUserByTagUid = async (
       endpointName: "checkUserByTagUid",
     });
   } catch (error) {
-    console.error("Check User By Tag UID API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Check User By Tag UID API Error:", error);
+    }
     throw error;
   }
 };
@@ -50,6 +52,10 @@ export const checkUserExists = async (
       endpointName: "checkUserExists",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return { exists: false };
+    }
+
     console.error("Check User Exists API Error:", error);
     throw error;
   }
@@ -69,6 +75,10 @@ export const getLoyaltyPoints = async (
       endpointName: "getLoyaltyPoints",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return { points: 0 };
+    }
+
     console.error("Get Loyalty Points API Error:", error);
     throw error;
   }
@@ -96,7 +106,9 @@ export const createUser = async (userData: {
       endpointName: "createUser",
     });
   } catch (error) {
-    console.error("Create User API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Create User API Error:", error);
+    }
     throw error;
   }
 };
@@ -124,7 +136,9 @@ export const updateUser = async (
       endpointName: "updateUser",
     });
   } catch (error) {
-    console.error("Update User API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Update User API Error:", error);
+    }
     throw error;
   }
 };
@@ -145,7 +159,9 @@ export const addFavoriteLocation = async (
       endpointName: "addFavoriteLocation",
     });
   } catch (error) {
-    console.error("Add Favorite Location API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Add Favorite Location API Error:", error);
+    }
     throw error;
   }
 };
@@ -166,7 +182,9 @@ export const addFavoriteMenu = async (
       endpointName: "addFavoriteMenu",
     });
   } catch (error) {
-    console.error("Add Favorite Menu API Error:", error);
+    if (!isNotFoundError(error)) {
+      console.error("Add Favorite Menu API Error:", error);
+    }
     throw error;
   }
 };
@@ -184,6 +202,10 @@ export const getFavoriteBranchByCode = async (branch_code: string) => {
       endpointName: "getFavoriteBranchByCode",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+
     console.error("Get Favorite Branch By Code API Error:", error);
     throw error;
   }
@@ -209,6 +231,10 @@ export const getFavoriteLocationByTagUid = async (tag_uid: string) => {
 
     return parsed.fave_location ?? null;
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+
     console.error("Get Favorite Location By Tag UID API Error:", error);
     throw error;
   }
@@ -227,6 +253,10 @@ export const getFavoriteMenuByCode = async (menu_code: string) => {
       endpointName: "getFavoriteMenuByCode",
     });
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+
     console.error("Get Favorite Menu By Code API Error:", error);
     throw error;
   }
@@ -251,6 +281,10 @@ export const getFavoriteMenuByTagUid = async (tag_uid: string) => {
 
     return parsed.fave_item ?? null;
   } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+
     console.error("Get Favorite Menu By Tag UID API Error:", error);
     throw error;
   }
