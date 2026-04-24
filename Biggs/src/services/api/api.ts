@@ -17,7 +17,6 @@ function normalizeApiBaseUrl(value: string): string {
 const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 console.log("[API] Raw API URL from env:", envApiUrl);
-
 const resolvedApiBaseUrl =
   typeof envApiUrl === "string" && envApiUrl.trim() !== ""
     ? envApiUrl
